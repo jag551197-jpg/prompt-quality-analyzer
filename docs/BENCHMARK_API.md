@@ -72,3 +72,37 @@ Exit codes:
 - `0`: all declared expectations passed.
 - `2`: one or more declared expectations failed.
 - other non-zero: transport/configuration error.
+
+## v1.4.2 canonical case contract
+
+A benchmark case is only `completed` after the final analytic result validates. The API returns both canonical fields and compatibility aliases:
+
+```json
+{
+  "case_id": "case-1",
+  "id": "case-1",
+  "category": "Coding",
+  "status": "completed",
+  "final_result": {
+    "overall_score": 82,
+    "hallucination_risk": "low",
+    "recommendations": []
+  },
+  "result": "<alias of final_result>",
+  "analysis": "<alias of final_result>",
+  "expectations": {
+    "passed": true,
+    "checks": []
+  },
+  "expectation": {
+    "pass": true,
+    "passed": true
+  },
+  "result_contract": {
+    "valid": true,
+    "errors": []
+  }
+}
+```
+
+`summary.status=completed` no longer means merely that provider interactions are terminal. It means all terminal cases have valid analytic result contracts. `result_integrity_rate` must be 100% for a publishable benchmark.

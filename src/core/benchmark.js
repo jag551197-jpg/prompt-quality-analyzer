@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { buildDeterministicResult, buildHybridResult } from './analyze.js';
 
-export const BENCHMARK_VERSION = '1.0.0';
+export const BENCHMARK_VERSION = '1.1.0';
 export const DEFAULT_MAX_CASES = 25;
+const TERMINAL_FAILURES = new Set(['failed','cancelled','incomplete','budget_exceeded','not-configured','submit-failed','invalid-result']);
 
 function clampInt(v, fallback, min, max) {
   const n = Number.parseInt(v, 10);
@@ -17,20 +18,24 @@ export function validateBenchmarkSuite(body, { maxCases = DEFAULT_MAX_CASES, max
   const seen = new Set();
   const normalized = cases.map((c, idx) => {
     if (!c || typeof c !== 'object') throw Object.assign(new Error(`case ${idx} must be an object`), { status: 400 });
-    const id = String(c.id || `case-${idx + 1}`).slice(0, 120);
+    const id = String(c.id || c.case_id || `case-${idx + 1}`).slice(0, 120);
     if (seen.has(id)) throw Object.assign(new Error(`duplicate case id: ${id}`), { status: 400 });
     seen.add(id);
-    const prompt = String(c.prompt || '');
-    const context = String(c.context || '');
+    const prompt = String(c.prompt || c.payload?.prompt || '');
+    const context = String(c.context || c.payload?.context || '');
     if (!prompt.trim()) throw Object.assign(new Error(`case ${id}: prompt is required`), { status: 400 });
     if (prompt.length > maxPromptChars) throw Object.assign(new Error(`case ${id}: prompt exceeds ${maxPromptChars} characters`), { status: 413 });
     if (context.length > maxContextChars) throw Object.assign(new Error(`case ${id}: context exceeds ${maxContextChars} characters`), { status: 413 });
     return {
       id,
+      category: String(c.category || c.intendedUse || c.intended_use || 'general').slice(0, 120),
+      tags: Array.isArray(c.tags) ? c.tags.map(x => String(x).slice(0, 80)).slice(0, 20) : [],
+      pair: c.pair == null ? null : String(c.pair).slice(0, 120),
+      notes: c.notes == null ? null : String(c.notes).slice(0, 1000),
       payload: {
         prompt,
         context,
-        intendedUse: String(c.intendedUse || c.intended_use || 'general').slice(0, 100),
+        intendedUse: String(c.intendedUse || c.intended_use || c.category || 'general').slice(0, 100),
         requiresCurrentFacts: Boolean(c.requiresCurrentFacts ?? c.requires_current_facts ?? false)
       },
       expected: normalizeExpected(c.expected || {})
@@ -38,6 +43,8 @@ export function validateBenchmarkSuite(body, { maxCases = DEFAULT_MAX_CASES, max
   });
   return {
     benchmark_name: String(body.benchmark_name || body.name || 'benchmark').slice(0, 160),
+    benchmark_version: String(body.benchmark_version || '').slice(0, 80) || null,
+    description: String(body.description || '').slice(0, 2000),
     tags: Array.isArray(body.tags) ? body.tags.map(x => String(x).slice(0, 80)).slice(0, 20) : [],
     cases: normalized,
     concurrency: clampInt(body.concurrency, 4, 1, 8)
@@ -74,17 +81,58 @@ export function evaluateExpectations(result, expected = {}) {
   return { passed: checks.every(c => c.pass), checks, check_count: checks.length, failed_checks: checks.filter(c=>!c.pass).length };
 }
 
+export function validateFinalResult(result) {
+  const errors = [];
+  if (!result || typeof result !== 'object') errors.push('final_result_missing');
+  if (!Number.isFinite(result?.overall_score)) errors.push('overall_score_missing_or_non_numeric');
+  if (!['low','medium','high'].includes(result?.hallucination_risk)) errors.push('hallucination_risk_invalid');
+  if (!Array.isArray(result?.recommendations)) errors.push('recommendations_missing');
+  if (!result?.dimensions || typeof result.dimensions !== 'object') errors.push('dimensions_missing');
+  return { valid: errors.length === 0, errors };
+}
+
+function compatibilityExpectation(expectations) {
+  return {
+    pass: expectations?.passed ?? null,
+    passed: expectations?.passed ?? null,
+    evaluated: (expectations?.check_count || 0) > 0,
+    checks: expectations?.checks || [],
+    failed_checks: expectations?.failed_checks || 0,
+    check_count: expectations?.check_count || 0
+  };
+}
+
 export function buildBenchmarkCaseBase(c) {
   const deterministic = buildDeterministicResult(c.payload);
+  const deterministicExpectations = evaluateExpectations(deterministic, c.expected);
   return {
+    // Canonical identity/metadata
     case_id: c.id,
+    id: c.id,
+    category: c.category,
+    tags: c.tags,
+    pair: c.pair,
+    notes: c.notes,
+    status: 'deterministic-complete',
     payload: c.payload,
+    prompt: c.payload.prompt,
+    context: c.payload.context,
+    intendedUse: c.payload.intendedUse,
+    requiresCurrentFacts: c.payload.requiresCurrentFacts,
     expected: c.expected,
+
+    // Analysis lifecycle
     deterministic_result: deterministic,
-    deterministic_expectations: evaluateExpectations(deterministic, c.expected),
+    deterministic_expectations: deterministicExpectations,
     interaction_id: null,
     judge_status: 'not-submitted',
-    submit_error: null
+    submit_error: null,
+    final_result: null,
+    result: null,
+    analysis: null,
+    expectations: null,
+    expectation: null,
+    result_contract: { valid: false, errors: ['final_result_missing'] }
   };
 }
 
@@ -100,31 +148,48 @@ export function finalizeBenchmarkCase(caseState, judgeStatus, config) {
     http_status: judgeStatus?.http_status || null
   };
   const finalResult = buildHybridResult(caseState.payload, caseState.deterministic_result, judge, judgeMeta, config);
-  const expectations = evaluateExpectations(finalResult, caseState.expected);
-  return { ...caseState, judge_status: judgeStatus?.status || caseState.judge_status, final_result: finalResult, expectations };
+  const contract = validateFinalResult(finalResult);
+  const expectations = contract.valid ? evaluateExpectations(finalResult, caseState.expected) : null;
+  const status = contract.valid ? 'completed' : 'invalid-result';
+  return {
+    ...caseState,
+    status,
+    judge_status: judgeStatus?.status || caseState.judge_status,
+    final_result: finalResult,
+    result: finalResult,
+    analysis: finalResult,
+    expectations,
+    expectation: expectations ? compatibilityExpectation(expectations) : null,
+    result_contract: contract,
+    completed_at: contract.valid ? new Date().toISOString() : null
+  };
 }
 
 export function summarizeBenchmark(run) {
   const cases = run.cases || [];
-  const terminal = cases.filter(c => c.final_result || ['failed','cancelled','incomplete','budget_exceeded','not-configured','submit-failed'].includes(c.judge_status));
-  const completed = cases.filter(c => c.final_result);
-  const passed = completed.filter(c => c.expectations?.passed).length;
+  const completed = cases.filter(c => c.status === 'completed' && c.result_contract?.valid === true);
+  const invalid = cases.filter(c => c.status === 'invalid-result' || (c.final_result && c.result_contract?.valid !== true));
+  const terminalFailures = cases.filter(c => TERMINAL_FAILURES.has(c.judge_status) && c.status !== 'completed');
+  const terminal = new Set([...completed, ...invalid, ...terminalFailures]);
   const withExpectations = completed.filter(c => (c.expectations?.check_count || 0) > 0);
-  const expectedPasses = withExpectations.filter(c=>c.expectations.passed).length;
-  const scores = completed.map(c=>c.final_result?.overall_score).filter(Number.isFinite);
+  const expectedPasses = withExpectations.filter(c => c.expectations.passed).length;
+  const scores = completed.map(c => c.final_result?.overall_score).filter(Number.isFinite);
   const avg = scores.length ? Math.round((scores.reduce((a,b)=>a+b,0)/scores.length)*100)/100 : null;
+  const resultIntegrityRate = cases.length ? Math.round((completed.length / cases.length) * 10000) / 100 : 100;
   return {
     total_cases: cases.length,
-    terminal_cases: terminal.length,
+    terminal_cases: terminal.size,
     completed_cases: completed.length,
-    pending_cases: Math.max(0, cases.length-terminal.length),
+    analytically_complete_cases: completed.length,
+    invalid_result_cases: invalid.length,
+    pending_cases: Math.max(0, cases.length-terminal.size),
     expectation_cases: withExpectations.length,
     expectation_passes: expectedPasses,
     expectation_failures: withExpectations.length-expectedPasses,
     expectation_pass_rate: withExpectations.length ? Math.round((expectedPasses/withExpectations.length)*10000)/100 : null,
     average_overall_score: avg,
-    passed_cases: passed,
-    status: terminal.length === cases.length ? 'completed' : 'in_progress'
+    result_integrity_rate: resultIntegrityRate,
+    status: terminal.size === cases.length ? (invalid.length ? 'invalid' : 'completed') : 'in_progress'
   };
 }
 
@@ -132,7 +197,9 @@ export function createBenchmarkRun(suite) {
   return {
     benchmark_id: randomUUID(),
     benchmark_version: BENCHMARK_VERSION,
+    suite_version: suite.benchmark_version,
     benchmark_name: suite.benchmark_name,
+    description: suite.description,
     tags: suite.tags,
     created_at: new Date().toISOString(),
     cases: suite.cases.map(buildBenchmarkCaseBase)
