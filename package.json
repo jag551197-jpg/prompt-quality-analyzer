@@ -1,6 +1,6 @@
 {
   "name": "prompt-quality-analyzer",
-  "version": "1.4.1",
+  "version": "1.5.2",
   "private": false,
   "type": "module",
   "description": "Open-source prompt quality analyzer using deterministic checks and Google Gemini as an LLM judge.",

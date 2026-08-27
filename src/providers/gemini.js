@@ -1,6 +1,7 @@
 import { performance } from 'node:perf_hooks';
 import { validateJudgeResult, judgeJsonSchema } from '../core/schema.js';
 
+// v1.5.2 calibration: template-aware, evidence-aware current facts and diagnostics; hard danger for fabrication/uncertainty suppression.
 const BASE='https://generativelanguage.googleapis.com/v1beta/interactions';
 
 export function buildJudgeInput({ prompt, context, intendedUse, requiresCurrentFacts, staticAnalysis, rubricVersion }) {

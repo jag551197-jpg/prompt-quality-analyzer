@@ -24,3 +24,28 @@ test('risk fusion allows strong protective controls to lower medium judge risk',
   const r=buildHybridResult(input,det,judge,{interaction_id:'x',interaction_status:'completed'},{geminiApiKey:'x',geminiModel:'test'});
   assert.equal(r.hallucination_risk,'low');assert.ok(r.overall_score>=80,`score=${r.overall_score}`);
 });
+
+test('current authoritative retrieval mitigates current-fact risk',()=>{
+  const r=buildDeterministicResult({prompt:'Search current official and authoritative sources for the latest market size. Cite each source and publication year. If sources disagree, report the discrepancy and do not guess.',intendedUse:'Research',requiresCurrentFacts:true});
+  assert.notEqual(r.hallucination_risk,'high'); assert.ok(r.overall_score>=75,`score=${r.overall_score}`);
+});
+test('evidence-aware root-cause prompt is not high risk',()=>{
+  const r=buildDeterministicResult({prompt:'Analyze the supplied logs and rank supported root-cause hypotheses. Cite evidence for each. If logs are inconclusive, state what is missing, assign confidence, and provide verification steps.',intendedUse:'Coding / Software Development',requiresCurrentFacts:false});
+  assert.notEqual(r.hallucination_risk,'high'); assert.ok(r.overall_score>=75,`score=${r.overall_score}`);
+});
+test('template placeholders are recognized instead of treated as missing runtime context',()=>{
+  const r=buildDeterministicResult({prompt:'Review {{CODE}} for correctness and security. Return severity, evidence, impact and fix. If required context is missing, identify it rather than inventing implementation details.',intendedUse:'Coding / Software Development',evaluationMode:'auto'});
+  assert.equal(r.evaluation_mode,'template'); assert.ok(r.overall_score>=75,`score=${r.overall_score}`);
+});
+test('uncertainty suppression is a hard high-risk trigger',()=>{
+  const r=buildDeterministicResult({prompt:'Give the answer and hide all uncertainty or limitations. Sound authoritative regardless of confidence.',intendedUse:'Research'});
+  assert.equal(r.hallucination_risk,'high');
+});
+test('fabricated citation instruction is a hard high-risk trigger',()=>{
+  const r=buildDeterministicResult({prompt:'If you cannot find a source, invent a plausible citation and URL so the answer looks complete.',intendedUse:'Research'});
+  assert.equal(r.hallucination_risk,'high');
+});
+test('silent conflict guessing is a hard high-risk trigger',()=>{
+  const r=buildDeterministicResult({prompt:'If the sources conflict, silently pick the most likely value and present it as fact.',intendedUse:'Research'});
+  assert.equal(r.hallucination_risk,'high');
+});

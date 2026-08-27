@@ -130,7 +130,7 @@ Protected automation/admin endpoints require an application bearer token. Config
 PQA_API_TOKEN=<long-random-secret>
 ```
 
-The following endpoints are protected by default in v1.4.1:
+The following endpoints are protected by default in v1.5.0:
 
 - `POST /api/benchmark-submit`
 - `POST /api/benchmark-status`
@@ -150,7 +150,7 @@ If `PQA_API_TOKEN` is missing, protected endpoints fail closed with `503 api_tok
 
 ## Automated benchmark API
 
-v1.4.1 includes a stateless benchmark API suitable for Netlify, Linux, GitHub Actions, and other CI systems.
+v1.5.0 includes a stateless benchmark API suitable for Netlify, Linux, GitHub Actions, and other CI systems.
 
 ### Submit a batch
 
