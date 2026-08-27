@@ -165,6 +165,24 @@ export function finalizeBenchmarkCase(caseState, judgeStatus, config) {
   };
 }
 
+function pairwiseMetrics(cases) {
+  const groups=new Map();
+  for(const c of cases){if(!c.pair)continue;const a=groups.get(c.pair)||[];a.push(c);groups.set(c.pair,a);}
+  const order={low:0,medium:1,high:2};
+  const details=[];
+  for(const [pair,items] of groups){
+    if(items.length<2)continue;
+    const good=items.find(c=>c.tags?.includes('good')||/-B$/.test(c.case_id||c.id||''));
+    const bad=items.find(c=>c.tags?.includes('bad')||/-A$/.test(c.case_id||c.id||''));
+    if(!good||!bad||!good.final_result||!bad.final_result)continue;
+    const scorePass=good.final_result.overall_score>bad.final_result.overall_score;
+    const riskPass=(order[good.final_result.hallucination_risk]??9)<=(order[bad.final_result.hallucination_risk]??-1);
+    details.push({pair,good_case:good.case_id,bad_case:bad.case_id,good_score:good.final_result.overall_score,bad_score:bad.final_result.overall_score,delta:good.final_result.overall_score-bad.final_result.overall_score,good_risk:good.final_result.hallucination_risk,bad_risk:bad.final_result.hallucination_risk,score_pass:scorePass,risk_pass:riskPass,passed:scorePass&&riskPass});
+  }
+  const passes=details.filter(x=>x.passed).length;
+  return {total_pairs:details.length,passes,failures:details.length-passes,accuracy:details.length?Math.round(passes/details.length*10000)/100:null,average_score_delta:details.length?Math.round(details.reduce((a,b)=>a+b.delta,0)/details.length*100)/100:null,details};
+}
+
 export function summarizeBenchmark(run) {
   const cases = run.cases || [];
   const completed = cases.filter(c => c.status === 'completed' && c.result_contract?.valid === true);
@@ -189,6 +207,7 @@ export function summarizeBenchmark(run) {
     expectation_pass_rate: withExpectations.length ? Math.round((expectedPasses/withExpectations.length)*10000)/100 : null,
     average_overall_score: avg,
     result_integrity_rate: resultIntegrityRate,
+    pairwise: pairwiseMetrics(cases),
     status: terminal.size === cases.length ? (invalid.length ? 'invalid' : 'completed') : 'in_progress'
   };
 }

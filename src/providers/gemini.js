@@ -4,9 +4,39 @@ import { validateJudgeResult, judgeJsonSchema } from '../core/schema.js';
 const BASE='https://generativelanguage.googleapis.com/v1beta/interactions';
 
 export function buildJudgeInput({ prompt, context, intendedUse, requiresCurrentFacts, staticAnalysis, rubricVersion }) {
-  return `You are a rigorous prompt-quality evaluator for software developers.\n\nEvaluate the PROMPT itself, not whether you personally can answer it. Be conservative and explainable. Scores are 0-100 where 100 is excellent. "conflict_risk" is scored positively: 100 means the prompt handles ambiguity/conflicts well and has low conflict risk. "context_efficiency" is also positive: 100 means concise, relevant, non-duplicative context.\n\nHallucination risk means prompt-level risk indicators only; do not claim certainty that a future model will hallucinate. Improve the prompt while preserving user intent. Do not add facts not supplied by the user.\n\nRubric version: ${rubricVersion}\nIntended use: ${intendedUse}\nRequires current facts: ${Boolean(requiresCurrentFacts)}\n\nDETERMINISTIC FINDINGS:\n${JSON.stringify(staticAnalysis)}\n\nPROMPT:\n---\n${prompt}\n---\n\nOPTIONAL CONTEXT:\n---\n${context || '(none)'}\n---`;
-}
+  const profile = staticAnalysis?.profile || 'general';
+  return `You are a rigorous prompt-quality evaluator for software developers.
 
+Evaluate the PROMPT itself, not whether you personally can answer it. Scores are 0-100 where 100 is excellent. Apply the rubric in a TASK-AWARE way: do not penalize a prompt for omitting controls that are irrelevant to its intended use. For example, coding or creative prompts do not inherently require web retrieval or citations; RAG/research/current-fact prompts do require stronger grounding. Structured extraction strongly values explicit schemas and missing-value handling. Agent prompts strongly value bounded tool use and safe failure behavior.
+
+Scoring principles:
+1. Reward explicit positive controls substantially: evidence boundaries, abstention/insufficient-evidence behavior, output contracts, bounded tool use, missing-value rules, conflict handling, destructive-action confirmation, and causal discipline.
+2. Distinguish ABSENCE OF A BEST PRACTICE from ACTIVE RISK. Missing a citation instruction may reduce quality slightly; telling the model to guess, fabricate, force certainty, silently resolve conflicts, or use stale memory for current facts is a serious risk.
+3. Do not force good prompts into the middle of the scale merely because they are not exhaustive. A focused prompt that adequately controls the risks relevant to its task can score 80-95.
+4. Reserve scores below 50 for materially underspecified, conflicting, unsafe, hallucination-inducing, or unusable prompts.
+5. "conflict_risk" is positive: 100 means ambiguity/conflicts are handled very well.
+6. "context_efficiency" is positive: 100 means concise, relevant, non-duplicative context.
+7. Hallucination risk is prompt-level risk only. Use HIGH primarily for explicit hallucination-inducing behavior or current factual requests without any grounding/retrieval. Use MEDIUM for meaningful missing safeguards. Use LOW when no explicit dangerous behavior exists and relevant protective controls are present.
+8. Preserve user intent when proposing an improved prompt. Do not add facts not supplied by the user.
+
+Rubric version: ${rubricVersion}
+Scoring profile: ${profile}
+Intended use: ${intendedUse}
+Requires current facts: ${Boolean(requiresCurrentFacts)}
+
+DETERMINISTIC FINDINGS (advisory evidence, not absolute truth):
+${JSON.stringify(staticAnalysis)}
+
+PROMPT:
+---
+${prompt}
+---
+
+OPTIONAL CONTEXT:
+---
+${context || '(none)'}
+---`;
+}
 function providerError(message,{status=null,category='judge_unavailable'}={}){const e=new Error(message);e.status=status;e.category=category;return e;}
 function categoryForStatus(status){if(status===401||status===403)return'authentication_failed';if(status===404)return'interaction_not_found';if(status===429)return'rate_limited';if(status>=500)return'provider_error';return'request_rejected';}
 async function fetchJson(url,{apiKey,method='GET',body,timeoutMs=12000}={}){
