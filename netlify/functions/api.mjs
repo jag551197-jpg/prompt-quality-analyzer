@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { analyzePrompt } from '../../src/core/analyze.js';
+import { analyzePrompt, buildDeterministicResult } from '../../src/core/analyze.js';
 import { testGeminiConnection } from '../../src/providers/gemini.js';
 import { configFromEnv } from '../../src/server/config.js';
 import { getLogs, logEvent } from '../../src/server/log-store.js';
@@ -22,7 +22,7 @@ function validatePayload(body) {
 
 export default async (req) => {
   const route = routeFor(req);
-  if (req.method === 'GET' && route === '/health') return json({ ok: true, version: '1.1.0', judge_configured: Boolean(cfg.geminiApiKey), judge_model: cfg.geminiModel });
+  if (req.method === 'GET' && route === '/health') return json({ ok: true, version: '1.1.1', judge_configured: Boolean(cfg.geminiApiKey), judge_model: cfg.geminiModel });
   if (req.method === 'GET' && route === '/logs') {
     const u = new URL(req.url);
     return json({ logs: getLogs({ limit: u.searchParams.get('limit'), requestId: u.searchParams.get('request_id') }), note: 'Best-effort instance-local log. For Netlify production diagnostics use Logs & Metrics > Functions or `netlify logs --follow`.' });
@@ -34,6 +34,18 @@ export default async (req) => {
     logEvent({ level: result.ok ? 'INFO' : 'WARN', request_id: requestId, stage: 'connection_test_complete', message: result.ok ? 'Gemini judge connection test passed' : `Gemini judge connection test failed (${result.category})`, elapsed_ms: result.duration_ms });
     return json({ request_id: requestId, ...result }, result.ok ? 200 : 503);
   }
+  if (req.method === 'POST' && route === '/deterministic') {
+    let body;
+    try { body = await req.json(); } catch { return json({ error: 'invalid_json' }, 400); }
+    const checked = validatePayload(body);
+    if (checked.error) return checked.error;
+    const requestId = randomUUID();
+    logEvent({ level: 'INFO', request_id: requestId, stage: 'deterministic', message: 'Running deterministic prompt checks' });
+    const result = buildDeterministicResult(checked.input);
+    logEvent({ level: 'INFO', request_id: requestId, stage: 'deterministic_complete', message: 'Deterministic analysis complete', elapsed_ms: result.timing.total_ms });
+    return json({ request_id: requestId, ...result });
+  }
+
   if (req.method !== 'POST' || !['/analyze', '/analyze-stream'].includes(route)) return json({ error: 'not_found' }, 404);
 
   let body;
@@ -60,7 +72,7 @@ export default async (req) => {
       const send = (payload) => controller.enqueue(encoder.encode(`${JSON.stringify(payload)}\n`));
       const onEvent = (event) => send({ request_id: requestId, ...event });
       try {
-        send({ type: 'meta', request_id: requestId, version: '1.1.0' });
+        send({ type: 'meta', request_id: requestId, version: '1.1.1' });
         const result = await analyzePrompt(checked.input, cfg, { onEvent, onLog });
         send({ type: 'result', request_id: requestId, result: { request_id: requestId, ...result } });
       } catch (e) {

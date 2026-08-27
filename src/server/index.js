@@ -4,7 +4,7 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { configFromEnv } from './config.js';
-import { analyzePrompt } from '../core/analyze.js';
+import { analyzePrompt, buildDeterministicResult } from '../core/analyze.js';
 import { testGeminiConnection } from '../providers/gemini.js';
 import { getLogs, logEvent } from './log-store.js';
 
@@ -45,7 +45,7 @@ function validate(payload) {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://localhost');
-    if (req.method === 'GET' && url.pathname === '/api/health') return json(res, 200, { ok:true, version:'1.1.0', judge_configured:Boolean(cfg.geminiApiKey), judge_model:cfg.geminiModel });
+    if (req.method === 'GET' && url.pathname === '/api/health') return json(res, 200, { ok:true, version:'1.1.1', judge_configured:Boolean(cfg.geminiApiKey), judge_model:cfg.geminiModel });
     if (req.method === 'GET' && url.pathname === '/api/logs') return json(res, 200, { logs:getLogs({ limit:url.searchParams.get('limit'), requestId:url.searchParams.get('request_id') }), note:'In-process diagnostic log.' });
     if (req.method === 'POST' && url.pathname === '/api/test-judge') {
       const requestId = randomUUID();
@@ -53,6 +53,14 @@ const server = http.createServer(async (req, res) => {
       const result = await testGeminiConnection({ apiKey:cfg.geminiApiKey, model:cfg.geminiModel, timeoutMs:Math.min(cfg.timeoutMs || 30000, 12000) });
       logEvent({ level:result.ok?'INFO':'WARN', request_id:requestId, stage:'connection_test_complete', message:result.ok?'Gemini judge connection test passed':`Gemini judge connection test failed (${result.category})`, elapsed_ms:result.duration_ms });
       return json(res, result.ok ? 200 : 503, { request_id:requestId, ...result });
+    }
+    if (req.method === 'POST' && url.pathname === '/api/deterministic') {
+      const input = validate(await readBody(req));
+      const requestId = randomUUID();
+      logEvent({ level:'INFO', request_id:requestId, stage:'deterministic', message:'Running deterministic prompt checks' });
+      const result = buildDeterministicResult(input);
+      logEvent({ level:'INFO', request_id:requestId, stage:'deterministic_complete', message:'Deterministic analysis complete', elapsed_ms:result.timing.total_ms });
+      return json(res, 200, { request_id:requestId, ...result });
     }
     if (req.method === 'POST' && ['/api/analyze','/api/analyze-stream'].includes(url.pathname)) {
       const input = validate(await readBody(req));
@@ -65,7 +73,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type':'application/x-ndjson; charset=utf-8', 'Cache-Control':'no-store, no-transform', 'X-Content-Type-Options':'nosniff', 'X-Accel-Buffering':'no' });
       const send = payload => res.write(`${JSON.stringify(payload)}\n`);
       const onEvent = event => send({ request_id:requestId, ...event });
-      send({ type:'meta', request_id:requestId, version:'1.1.0' });
+      send({ type:'meta', request_id:requestId, version:'1.1.1' });
       try {
         const result = await analyzePrompt(input, cfg, { onEvent, onLog });
         send({ type:'result', request_id:requestId, result:{ request_id:requestId, ...result } });
@@ -88,4 +96,4 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(cfg.port, '0.0.0.0', () => console.log(`Prompt Quality Analyzer v1.1.0 listening on http://0.0.0.0:${cfg.port} (${cfg.geminiApiKey ? 'Gemini judge enabled' : 'deterministic-only'})`));
+server.listen(cfg.port, '0.0.0.0', () => console.log(`Prompt Quality Analyzer v1.1.1 listening on http://0.0.0.0:${cfg.port} (${cfg.geminiApiKey ? 'Gemini judge enabled' : 'deterministic-only'})`));

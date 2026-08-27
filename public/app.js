@@ -14,19 +14,19 @@ function appendLog(evt) {
   const t = evt.elapsed_ms != null ? `+${fmtMs(evt.elapsed_ms)}` : new Date().toLocaleTimeString();
   const stage = evt.stage ? `[${evt.stage}]` : '';
   currentLogs.push(`${t} ${stage} ${evt.message || evt.type || 'event'}`.trim());
-  if (currentLogs.length > 100) currentLogs = currentLogs.slice(-100);
+  if (currentLogs.length > 120) currentLogs = currentLogs.slice(-120);
   $('liveLog').textContent = currentLogs.join('\n');
   $('liveLog').scrollTop = $('liveLog').scrollHeight;
 }
-function setProgress(evt) {
-  if (evt.request_id) $('requestId').textContent = evt.request_id.slice(0, 8);
-  if (evt.stage) $('stage').textContent = evt.message || evt.stage;
-  if (Number.isFinite(evt.progress)) {
-    $('progressBar').style.width = `${Math.max(0, Math.min(100, evt.progress))}%`;
-    $('progressText').textContent = `${Math.round(evt.progress)}%`;
+function setProgress({stage, message, progress, eta_ms, request_id}) {
+  if (request_id) $('requestId').textContent = request_id.slice(0, 8);
+  if (message || stage) $('stage').textContent = message || stage;
+  if (Number.isFinite(progress)) {
+    $('progressBar').style.width = `${Math.max(0, Math.min(100, progress))}%`;
+    $('progressText').textContent = `${Math.round(progress)}%`;
   }
-  if (evt.eta_ms != null) currentEtaMs = Math.max(0, Number(evt.eta_ms));
-  appendLog(evt);
+  if (eta_ms != null) currentEtaMs = Math.max(0, Number(eta_ms));
+  appendLog({ stage, message, request_id });
 }
 function startClock() {
   activeStart = performance.now();
@@ -69,41 +69,37 @@ function render(r) {
     $('judgeResponse').textContent = JSON.stringify(r.judge_response, null, 2);
     $('copyJudge').disabled = false;
   } else {
-    $('judgeResponse').textContent = r.judge?.error ? `No Gemini response.\nFallback reason: ${r.judge.error_category || 'judge_unavailable'}\n${r.judge.error}` : 'Gemini judge was not configured. Deterministic analysis was used.';
+    $('judgeResponse').textContent = r.judge?.error ? `No Gemini response.\nFallback reason: ${r.judge.error_category || 'judge_unavailable'}\n${r.judge.error}` : 'Gemini judge was not configured or has not run. Deterministic analysis was used.';
   }
 }
 
-async function streamAnalysis(payload) {
-  const res = await fetch('/api/analyze-stream', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/x-ndjson' }, body: JSON.stringify(payload) });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.detail || data.error || `Analysis failed (${res.status})`);
-  }
-  if (!res.body) throw new Error('Streaming response is not available in this browser.');
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let finalResult = null;
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n'); buffer = lines.pop() || '';
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      const evt = JSON.parse(line);
-      if (evt.type === 'progress') setProgress(evt);
-      else if (evt.type === 'meta') { $('requestId').textContent = evt.request_id?.slice(0,8) || '—'; appendLog({ message: `Request ${evt.request_id} started` }); }
-      else if (evt.type === 'result') finalResult = evt.result;
-      else if (evt.type === 'error') throw new Error(evt.detail || evt.error || 'Analysis failed');
-    }
-  }
-  if (buffer.trim()) {
-    const evt = JSON.parse(buffer);
-    if (evt.type === 'result') finalResult = evt.result;
-  }
-  if (!finalResult) throw new Error('Analysis stream ended without a result.');
-  return finalResult;
+async function postJson(url, payload) {
+  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || data.error || `Request failed (${res.status})`);
+  return data;
+}
+
+/*
+ * Portable two-phase execution:
+ * 1) deterministic endpoint always returns first, so the user immediately sees a real result;
+ * 2) full analysis endpoint adds Gemini when available and always fails open to deterministic.
+ * This avoids making correctness dependent on streaming/CDN behavior.
+ */
+async function runAnalysis(payload) {
+  setProgress({ stage: 'deterministic', message: 'Running deterministic prompt checks', progress: 8, eta_ms: 500 });
+  const deterministic = await postJson('/api/deterministic', payload);
+  setProgress({ stage: 'deterministic_complete', message: `Deterministic analysis complete (${fmtMs(deterministic.timing?.deterministic_ms)})`, progress: 30, eta_ms: 8000, request_id: deterministic.request_id });
+  render(deterministic);
+  appendLog({ stage: 'deterministic_result', message: `Preliminary score ${deterministic.overall_score}/100 • risk ${deterministic.hallucination_risk}` });
+
+  setProgress({ stage: 'judge_request', message: 'Calling Gemini semantic judge', progress: 42, eta_ms: 8000 });
+  const full = await postJson('/api/analyze', payload);
+  appendLog({ stage: 'analysis_response', message: `Analysis API returned • request ${full.request_id?.slice(0,8) || '—'} • mode ${full.mode}` });
+  setProgress({ stage: full.judge?.status === 'ok' ? 'judge_complete' : 'judge_fallback', message: full.judge?.status === 'ok' ? `Gemini judge complete (${fmtMs(full.judge?.duration_ms)})` : `Gemini unavailable; deterministic fallback (${full.judge?.error_category || full.judge?.status || 'unknown'})`, progress: 88, eta_ms: 250, request_id: full.request_id });
+  render(full);
+  setProgress({ stage: 'complete', message: `Analysis complete • score ${full.overall_score}/100`, progress: 100, eta_ms: 0, request_id: full.request_id });
+  return full;
 }
 
 async function analyze(promptOverride) {
@@ -112,10 +108,12 @@ async function analyze(promptOverride) {
   btn.disabled = true; btn.textContent = 'Analyzing…'; resetRun(); startClock();
   try {
     const payload = { prompt, context: $('context').value, intendedUse: $('useCase').value, requiresCurrentFacts: $('current').checked };
-    const result = await streamAnalysis(payload);
-    render(result); stopClock(result.timing?.total_ms);
+    const result = await runAnalysis(payload);
+    stopClock(result.timing?.total_ms);
   } catch (e) {
-    stopClock(); appendLog({ stage: 'error', message: e.message }); alert(e.message);
+    stopClock();
+    appendLog({ stage: 'error', message: e.message });
+    alert(e.message);
   } finally { btn.disabled = false; btn.textContent = 'Analyze Prompt'; }
 }
 

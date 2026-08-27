@@ -3,7 +3,7 @@ import { deterministicAnalyze } from './deterministic.js';
 import { DIMENSIONS, RUBRIC_VERSION, weightedScore } from './rubric.js';
 import { judgeWithGemini } from '../providers/gemini.js';
 
-function heuristicScores(s) {
+export function heuristicScores(s) {
   const f = s.flags, m = s.metrics;
   return {
     instruction_clarity: m.prompt_chars >= 80 ? 72 : 52,
@@ -19,11 +19,33 @@ function heuristicScores(s) {
 
 function nowMs(start) { return Math.round(performance.now() - start); }
 
-/**
- * Analyze a prompt with deterministic rules and, when configured, Gemini.
- * Hooks are intentionally transport-agnostic so CLI, Linux HTTP, and Netlify
- * can all expose the same real-time progress without duplicating core logic.
- */
+export function buildDeterministicResult(input) {
+  const start = performance.now();
+  const staticAnalysis = deterministicAnalyze(input);
+  const scores = heuristicScores(staticAnalysis);
+  const overall = weightedScore(scores);
+  return {
+    version: '1.1.1',
+    rubric_version: RUBRIC_VERSION,
+    mode: 'deterministic-only',
+    timing: { total_ms: nowMs(start), deterministic_ms: nowMs(start), gemini_ms: null },
+    judge: { provider: null, model: null, status: 'not-run', confidence: null, error: null, error_category: null, http_status: null, duration_ms: null },
+    judge_response: null,
+    overall_score: overall,
+    quality_level: overall >= 85 ? 'excellent' : overall >= 70 ? 'good' : overall >= 55 ? 'needs-improvement' : 'poor',
+    hallucination_risk: staticAnalysis.hallucination_risk,
+    dimensions: Object.fromEntries(Object.entries(DIMENSIONS).map(([key, cfg]) => [key, { label: cfg.label, weight: cfg.weight, score: Math.round(scores[key]) }])),
+    strengths: [],
+    weaknesses: staticAnalysis.issues.slice(0, 10),
+    risk_indicators: staticAnalysis.risk_indicators.slice(0, 10),
+    recommendations: staticAnalysis.recommendations.slice(0, 10),
+    improved_prompt: null,
+    deterministic: staticAnalysis,
+    disclaimer: 'Hallucination risk identifies prompt-level risk factors; it does not predict with certainty whether a model will hallucinate.'
+  };
+}
+
+/** Full analysis. Deterministic evaluation always runs first and Gemini is optional/fail-open. */
 export async function analyzePrompt(input, config = {}, hooks = {}) {
   const start = performance.now();
   const estimatedJudgeMs = Number(config.estimatedJudgeMs || 8000);
@@ -34,20 +56,13 @@ export async function analyzePrompt(input, config = {}, hooks = {}) {
   };
 
   emit('received', 'Analysis request received', 2, config.geminiApiKey ? estimatedJudgeMs + 500 : 400);
-
   emit('deterministic', 'Running deterministic prompt checks', 10, config.geminiApiKey ? estimatedJudgeMs + 300 : 250);
   const deterministicStart = performance.now();
   const staticAnalysis = deterministicAnalyze(input);
   const deterministicMs = Math.round(performance.now() - deterministicStart);
-  emit('deterministic_complete', `Deterministic checks complete in ${deterministicMs} ms`, 25, config.geminiApiKey ? estimatedJudgeMs : 150, {
-    deterministic_ms: deterministicMs,
-    risk: staticAnalysis.hallucination_risk
-  });
+  emit('deterministic_complete', `Deterministic checks complete in ${deterministicMs} ms`, 25, config.geminiApiKey ? estimatedJudgeMs : 150, { deterministic_ms: deterministicMs, risk: staticAnalysis.hallucination_risk });
 
-  let judge = null;
-  let judgeError = null;
-  let judgeMeta = null;
-
+  let judge = null, judgeError = null, judgeMeta = null;
   if (!config.geminiApiKey) {
     emit('judge_skipped', 'Gemini judge is not configured; using deterministic scoring', 70, 120, { fallback: 'missing_api_key' });
   } else {
@@ -82,13 +97,9 @@ export async function analyzePrompt(input, config = {}, hooks = {}) {
   const hallucinationRisk = risks.sort((a, b) => riskOrder[b] - riskOrder[a])[0] || 'low';
 
   const result = {
-    version: '1.1.0', rubric_version: RUBRIC_VERSION,
+    version: '1.1.1', rubric_version: RUBRIC_VERSION,
     mode: judge ? 'hybrid-gemini' : 'deterministic-only',
-    timing: {
-      total_ms: nowMs(start),
-      deterministic_ms: deterministicMs,
-      gemini_ms: judgeMeta?.duration_ms ?? null
-    },
+    timing: { total_ms: nowMs(start), deterministic_ms: deterministicMs, gemini_ms: judgeMeta?.duration_ms ?? null },
     judge: {
       provider: config.geminiApiKey ? 'google-gemini' : null,
       model: config.geminiApiKey ? (config.geminiModel || 'gemini-3.7-flash') : null,
@@ -100,14 +111,10 @@ export async function analyzePrompt(input, config = {}, hooks = {}) {
       duration_ms: judgeMeta?.duration_ms ?? null
     },
     judge_response: judge ? {
-      scores: judge.scores,
-      hallucination_risk: judge.hallucination_risk,
-      strengths: judge.strengths,
-      weaknesses: judge.weaknesses,
-      risk_indicators: judge.risk_indicators,
-      recommendations: judge.recommendations,
-      improved_prompt: judge.improved_prompt,
-      confidence: judge.confidence
+      scores: judge.scores, hallucination_risk: judge.hallucination_risk,
+      strengths: judge.strengths, weaknesses: judge.weaknesses,
+      risk_indicators: judge.risk_indicators, recommendations: judge.recommendations,
+      improved_prompt: judge.improved_prompt, confidence: judge.confidence
     } : null,
     overall_score: overall,
     quality_level: overall >= 85 ? 'excellent' : overall >= 70 ? 'good' : overall >= 55 ? 'needs-improvement' : 'poor',
@@ -121,7 +128,6 @@ export async function analyzePrompt(input, config = {}, hooks = {}) {
     deterministic: staticAnalysis,
     disclaimer: 'Hallucination risk identifies prompt-level risk factors; it does not predict with certainty whether a model will hallucinate.'
   };
-
   emit('complete', `Analysis complete in ${result.timing.total_ms} ms`, 100, 0, { mode: result.mode, overall_score: result.overall_score });
   return result;
 }

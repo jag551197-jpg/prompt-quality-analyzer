@@ -131,3 +131,6 @@ netlify logs --follow
 ### ETA
 
 ETA is an estimate, not a guarantee. `GEMINI_ESTIMATED_MS` controls the initial estimate (default 8000 ms). The UI shows actual elapsed time continuously and displays the observed Gemini and total durations after completion.
+
+## v1.1.1 reliability fix
+The browser no longer depends on response streaming for correctness. It first calls `/api/deterministic` and renders a real deterministic result, then calls `/api/analyze` for the optional Gemini semantic judge. If Gemini is unavailable or invalid, `/api/analyze` returns the deterministic result with a categorized fallback. Streaming remains available as an optional API capability, but the UI does not require it.
