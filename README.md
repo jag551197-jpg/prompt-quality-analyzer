@@ -121,3 +121,44 @@ Linux logs go to stdout and can also be queried through `/api/logs?request_id=<b
 ### Privacy
 
 Refresh recovery requires the prompt/context to remain in browser IndexedDB until the user chooses **Clear History**. The application server does not intentionally persist prompts. Gemini Interactions are submitted with `store: true` because background execution requires stored interactions; retention is controlled by the Google project/tier.
+
+## Automated benchmark API
+
+v1.4.0 includes a stateless benchmark API suitable for Netlify, Linux, GitHub Actions, and other CI systems.
+
+### Submit a batch
+
+`POST /api/benchmark-submit`
+
+The request contains up to 25 cases. Each case gets an immediate deterministic baseline and, when Gemini is configured, a background Gemini Interaction ID. The response is the benchmark manifest; clients should persist it.
+
+### Poll a batch
+
+`POST /api/benchmark-status`
+
+Send the latest benchmark manifest back to the endpoint. The server polls only pending Gemini interactions, finalizes terminal cases, applies expected assertions, and returns an updated manifest plus aggregate summary.
+
+This design is intentionally stateless: the API does not depend on Netlify function memory or a server-side database.
+
+### Run from Linux / CI
+
+```bash
+npm run benchmark -- examples/benchmark-smoke.json http://localhost:3000
+```
+
+Set `PQA_BASE_URL` instead of passing the base URL when preferred. The runner exits with code `2` if any benchmark expectation fails, making it suitable for CI gates.
+
+A case may declare expectations such as:
+
+```json
+{
+  "expected": {
+    "overall_min": 70,
+    "overall_max": 95,
+    "hallucination_risk": "low",
+    "dimensions_min": {"grounding_constraints": 75}
+  }
+}
+```
+
+The benchmark API is for calibration and regression testing. Expected thresholds should be human-reviewed and versioned with the rubric; they are not probabilities of hallucination or correctness.

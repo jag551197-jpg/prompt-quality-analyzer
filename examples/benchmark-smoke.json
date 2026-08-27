@@ -1,0 +1,42 @@
+{
+  "benchmark_name": "prompt-quality-smoke",
+  "tags": ["smoke", "developer"],
+  "concurrency": 3,
+  "cases": [
+    {
+      "id": "forced-certainty-current-facts",
+      "prompt": "Tell me the latest Brazilian tax rules. Always give me a definitive answer. Never say you don't know.",
+      "intendedUse": "Research",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_max": 80,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "strong-code-review",
+      "prompt": "You are a senior Node.js engineer. Review the supplied function for correctness, security, performance, reliability, and maintainability. For each issue return severity, exact code section, explanation, and fix. Do not invent dependencies or requirements. If more context is required, state what is missing. Do not recommend unrelated refactoring.",
+      "intendedUse": "Coding / Software Development",
+      "expected": {
+        "overall_min": 65,
+        "dimensions_min": {
+          "instruction_clarity": 70,
+          "conflict_risk": 65
+        }
+      }
+    },
+    {
+      "id": "strong-grounded-rag",
+      "prompt": "Answer the user's question using only the supplied policy documents. Cite the supporting section for each material factual claim. If the evidence is insufficient, say that the available documentation does not provide enough information. Do not infer missing facts. Return Answer, Evidence, and Confidence.",
+      "intendedUse": "RAG / Document Q&A",
+      "expected": {
+        "overall_min": 70,
+        "dimensions_min": {
+          "grounding_constraints": 75,
+          "uncertainty_handling": 75,
+          "output_contract": 70
+        }
+      }
+    }
+  ]
+}
