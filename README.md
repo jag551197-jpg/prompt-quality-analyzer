@@ -132,5 +132,28 @@ netlify logs --follow
 
 ETA is an estimate, not a guarantee. `GEMINI_ESTIMATED_MS` controls the initial estimate (default 8000 ms). The UI shows actual elapsed time continuously and displays the observed Gemini and total durations after completion.
 
-## v1.1.1 reliability fix
+## v1.2.0 reliability fix
 The browser no longer depends on response streaming for correctness. It first calls `/api/deterministic` and renders a real deterministic result, then calls `/api/analyze` for the optional Gemini semantic judge. If Gemini is unavailable or invalid, `/api/analyze` returns the deterministic result with a categorized fallback. Streaming remains available as an optional API capability, but the UI does not require it.
+
+## v1.2 durable asynchronous browser jobs
+
+The browser now owns a durable analysis transaction ledger in **IndexedDB**. Each analysis receives a UUID and moves through explicit states: `created`, `deterministic_running`, `deterministic_complete`, `judge_running`, `retry_wait`, and `complete`/`failed`/`cancelled`.
+
+The UI never waits on the Gemini request directly. It polls IndexedDB every 500 ms and renders the latest durable state. Gemini execution runs asynchronously relative to the UI. If the page is refreshed, pending jobs remain visible and are resumed when their browser lease expires. A short IndexedDB lease prevents multiple tabs from executing the same job simultaneously.
+
+Additional reliability behavior:
+
+- deterministic result is persisted before Gemini starts;
+- up to three network/transient retries with exponential backoff and jitter;
+- authentication/validation failures fail open to the deterministic result;
+- historical Gemini durations are stored locally and used as the ETA baseline;
+- progress during Gemini is explicitly estimated and capped until a real response is received;
+- every browser transaction retains a bounded event log;
+- the same transaction UUID is sent to the server as `X-PQA-Transaction-ID`, so Linux logs can be correlated directly;
+- no Netlify-specific storage is required. Netlify remains a deployment adapter only.
+
+### Browser persistence and privacy
+
+To support refresh recovery, the v1.2 browser ledger stores the analysis payload (including prompt/context), results, timestamps, retry state, and bounded browser event log in IndexedDB on that browser. This data is not persisted by the application server. Users can clear it with **Clear History**. Browser storage should still be treated as local persisted data; do not analyze secrets or data that should not remain in the browser profile.
+
+Cancellation aborts the active browser-owned HTTP request when possible and marks the durable transaction cancelled so late responses cannot overwrite that state.

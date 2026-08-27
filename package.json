@@ -1,6 +1,6 @@
 {
   "name": "prompt-quality-analyzer",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": false,
   "type": "module",
   "description": "Open-source prompt quality analyzer using deterministic checks and Google Gemini as an LLM judge.",
@@ -12,7 +12,7 @@
     "dev": "node --watch src/server/index.js",
     "start": "node src/server/index.js",
     "test": "node --test",
-    "check": "npm test && node --check src/server/index.js && node --check src/core/analyze.js && node --check src/providers/gemini.js && node --check netlify/functions/api.mjs && node --check public/app.js",
+    "check": "npm test && node --check src/server/index.js && node --check src/core/analyze.js && node --check src/providers/gemini.js && node --check netlify/functions/api.mjs && node --check public/app.js && node --check public/idb.js && node --check public/job-manager.js",
     "cli": "node src/cli.js"
   }
 }

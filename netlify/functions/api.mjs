@@ -20,15 +20,17 @@ function validatePayload(body) {
   return { input: { prompt, context, intendedUse: String(intendedUse).slice(0, 100), requiresCurrentFacts: Boolean(requiresCurrentFacts) } };
 }
 
+function requestIdFor(req) { const v=String(req.headers.get('x-pqa-transaction-id')||''); return /^[0-9a-f-]{36}$/i.test(v) ? v : randomUUID(); }
+
 export default async (req) => {
   const route = routeFor(req);
-  if (req.method === 'GET' && route === '/health') return json({ ok: true, version: '1.1.1', judge_configured: Boolean(cfg.geminiApiKey), judge_model: cfg.geminiModel });
+  if (req.method === 'GET' && route === '/health') return json({ ok: true, version: '1.2.0', judge_configured: Boolean(cfg.geminiApiKey), judge_model: cfg.geminiModel });
   if (req.method === 'GET' && route === '/logs') {
     const u = new URL(req.url);
     return json({ logs: getLogs({ limit: u.searchParams.get('limit'), requestId: u.searchParams.get('request_id') }), note: 'Best-effort instance-local log. For Netlify production diagnostics use Logs & Metrics > Functions or `netlify logs --follow`.' });
   }
   if (req.method === 'POST' && route === '/test-judge') {
-    const requestId = randomUUID();
+    const requestId = requestIdFor(req);
     logEvent({ level: 'INFO', request_id: requestId, stage: 'connection_test', message: 'Testing Gemini judge connection' });
     const result = await testGeminiConnection({ apiKey: cfg.geminiApiKey, model: cfg.geminiModel, timeoutMs: Math.min(cfg.timeoutMs || 30000, 12000) });
     logEvent({ level: result.ok ? 'INFO' : 'WARN', request_id: requestId, stage: 'connection_test_complete', message: result.ok ? 'Gemini judge connection test passed' : `Gemini judge connection test failed (${result.category})`, elapsed_ms: result.duration_ms });
@@ -39,7 +41,7 @@ export default async (req) => {
     try { body = await req.json(); } catch { return json({ error: 'invalid_json' }, 400); }
     const checked = validatePayload(body);
     if (checked.error) return checked.error;
-    const requestId = randomUUID();
+    const requestId = requestIdFor(req);
     logEvent({ level: 'INFO', request_id: requestId, stage: 'deterministic', message: 'Running deterministic prompt checks' });
     const result = buildDeterministicResult(checked.input);
     logEvent({ level: 'INFO', request_id: requestId, stage: 'deterministic_complete', message: 'Deterministic analysis complete', elapsed_ms: result.timing.total_ms });
@@ -53,7 +55,7 @@ export default async (req) => {
   catch { return json({ error: 'invalid_json' }, 400); }
   const checked = validatePayload(body);
   if (checked.error) return checked.error;
-  const requestId = randomUUID();
+  const requestId = requestIdFor(req);
   const onLog = (event) => logEvent({ request_id: requestId, ...event });
 
   if (route === '/analyze') {
@@ -72,7 +74,7 @@ export default async (req) => {
       const send = (payload) => controller.enqueue(encoder.encode(`${JSON.stringify(payload)}\n`));
       const onEvent = (event) => send({ request_id: requestId, ...event });
       try {
-        send({ type: 'meta', request_id: requestId, version: '1.1.1' });
+        send({ type: 'meta', request_id: requestId, version: '1.2.0' });
         const result = await analyzePrompt(checked.input, cfg, { onEvent, onLog });
         send({ type: 'result', request_id: requestId, result: { request_id: requestId, ...result } });
       } catch (e) {
