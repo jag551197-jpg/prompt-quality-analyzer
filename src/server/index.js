@@ -4,98 +4,45 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { configFromEnv } from './config.js';
-import { analyzePrompt, buildDeterministicResult } from '../core/analyze.js';
-import { testGeminiConnection } from '../providers/gemini.js';
+import { buildDeterministicResult, buildHybridResult } from '../core/analyze.js';
+import { submitGeminiJudge, getGeminiJudgeStatus, testGeminiConnection } from '../providers/gemini.js';
 import { getLogs, logEvent } from './log-store.js';
 
-try {
-  const text = fs.readFileSync('.env', 'utf8');
-  for (const line of text.split(/\r?\n/)) {
-    const m = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
-    if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '');
+try{const text=fs.readFileSync('.env','utf8');for(const line of text.split(/\r?\n/)){const m=line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);if(m&&process.env[m[1]]===undefined)process.env[m[1]]=m[2].replace(/^['"]|['"]$/g,'');}}catch{}
+const cfg=configFromEnv();
+const publicDir=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../../public');
+const mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.svg':'image/svg+xml'};
+function json(res,status,payload){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(payload));}
+async function readBody(req){let size=0,chunks=[];for await(const c of req){size+=c.length;if(size>524288)throw Object.assign(new Error('request too large'),{status:413});chunks.push(c);}try{return JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}catch{throw Object.assign(new Error('invalid JSON body'),{status:400});}}
+function validate(payload){const{prompt,context='',intendedUse='general',requiresCurrentFacts=false}=payload||{};if(typeof prompt!=='string'||!prompt.trim())throw Object.assign(new Error('prompt is required'),{status:400});if(prompt.length>cfg.maxPromptChars)throw Object.assign(new Error(`prompt exceeds ${cfg.maxPromptChars} characters`),{status:413});if(typeof context!=='string'||context.length>cfg.maxContextChars)throw Object.assign(new Error(`context exceeds ${cfg.maxContextChars} characters`),{status:413});return{prompt,context,intendedUse:String(intendedUse).slice(0,100),requiresCurrentFacts:Boolean(requiresCurrentFacts)};}
+function requestIdFor(req){const v=String(req.headers['x-pqa-transaction-id']||'');return /^[0-9a-f-]{36}$/i.test(v)?v:randomUUID();}
+
+const server=http.createServer(async(req,res)=>{try{
+  const url=new URL(req.url,'http://localhost'); const requestId=requestIdFor(req);
+  if(req.method==='GET'&&url.pathname==='/api/health')return json(res,200,{ok:true,version:'1.3.0',architecture:'gemini-background-polling',judge_configured:Boolean(cfg.geminiApiKey),judge_model:cfg.geminiModel});
+  if(req.method==='GET'&&url.pathname==='/api/logs')return json(res,200,{logs:getLogs({limit:url.searchParams.get('limit'),requestId:url.searchParams.get('request_id')}),note:'In-process diagnostic log.'});
+  if(req.method==='POST'&&url.pathname==='/api/test-judge'){logEvent({level:'INFO',request_id:requestId,stage:'connection_test',message:'Testing Gemini background submit + polling'});const result=await testGeminiConnection({apiKey:cfg.geminiApiKey,model:cfg.geminiModel,timeoutMs:Math.min(cfg.timeoutMs||30000,12000)});return json(res,result.ok?200:503,{request_id:requestId,...result});}
+  if(req.method==='POST'&&url.pathname==='/api/deterministic'){const input=validate(await readBody(req));logEvent({level:'INFO',request_id:requestId,stage:'deterministic',message:'Running deterministic prompt checks'});const result=buildDeterministicResult(input);logEvent({level:'INFO',request_id:requestId,stage:'deterministic_complete',message:'Deterministic analysis complete',elapsed_ms:result.timing.total_ms});return json(res,200,{request_id:requestId,...result});}
+  if(req.method==='POST'&&url.pathname==='/api/judge-submit'){
+    const input=validate(await readBody(req)); const deterministic=buildDeterministicResult(input);
+    logEvent({level:'INFO',request_id:requestId,stage:'judge_submit',message:`Submitting Gemini background interaction (${cfg.geminiModel})`});
+    const sub=await submitGeminiJudge({...input,staticAnalysis:deterministic.deterministic},{apiKey:cfg.geminiApiKey,model:cfg.geminiModel,rubricVersion:deterministic.rubric_version,timeoutMs:Math.min(cfg.timeoutMs||30000,10000)});
+    logEvent({level:'INFO',request_id:requestId,stage:'judge_submitted',message:`Gemini interaction ${sub.interaction_id} accepted with status ${sub.status}`,elapsed_ms:sub.duration_ms});
+    return json(res,202,{request_id:requestId,...sub});
   }
-} catch {}
-
-const cfg = configFromEnv();
-const publicDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../public');
-const mime = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.json':'application/json; charset=utf-8', '.svg':'image/svg+xml' };
-
-function json(res, status, payload) {
-  res.writeHead(status, { 'Content-Type':'application/json; charset=utf-8', 'Cache-Control':'no-store', 'X-Content-Type-Options':'nosniff' });
-  res.end(JSON.stringify(payload));
-}
-async function readBody(req) {
-  let size = 0, chunks = [];
-  for await (const c of req) {
-    size += c.length;
-    if (size > 262144) throw Object.assign(new Error('request too large'), { status:413 });
-    chunks.push(c);
+  if(req.method==='GET'&&url.pathname==='/api/judge-status'){
+    const interactionId=url.searchParams.get('interaction_id'); if(!interactionId)return json(res,400,{error:'interaction_id_required'});
+    const st=await getGeminiJudgeStatus(interactionId,{apiKey:cfg.geminiApiKey,timeoutMs:Math.min(cfg.timeoutMs||30000,10000)});
+    logEvent({level:st.error?'WARN':'INFO',request_id:requestId,stage:'judge_poll',message:`Gemini interaction status: ${st.status}`,interaction_id:interactionId});
+    return json(res,200,{request_id:requestId,...st});
   }
-  try { return JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}'); }
-  catch { throw Object.assign(new Error('invalid JSON body'), { status:400 }); }
-}
-function validate(payload) {
-  const { prompt, context='', intendedUse='general', requiresCurrentFacts=false } = payload || {};
-  if (typeof prompt !== 'string' || !prompt.trim()) throw Object.assign(new Error('prompt is required'), { status:400 });
-  if (prompt.length > cfg.maxPromptChars) throw Object.assign(new Error(`prompt exceeds ${cfg.maxPromptChars} characters`), { status:413 });
-  if (typeof context !== 'string' || context.length > cfg.maxContextChars) throw Object.assign(new Error(`context exceeds ${cfg.maxContextChars} characters`), { status:413 });
-  return { prompt, context, intendedUse:String(intendedUse).slice(0,100), requiresCurrentFacts:Boolean(requiresCurrentFacts) };
-}
-
-function requestIdFor(req) { const v=String(req.headers['x-pqa-transaction-id']||''); return /^[0-9a-f-]{36}$/i.test(v) ? v : randomUUID(); }
-
-const server = http.createServer(async (req, res) => {
-  try {
-    const url = new URL(req.url, 'http://localhost');
-    if (req.method === 'GET' && url.pathname === '/api/health') return json(res, 200, { ok:true, version:'1.2.0', judge_configured:Boolean(cfg.geminiApiKey), judge_model:cfg.geminiModel });
-    if (req.method === 'GET' && url.pathname === '/api/logs') return json(res, 200, { logs:getLogs({ limit:url.searchParams.get('limit'), requestId:url.searchParams.get('request_id') }), note:'In-process diagnostic log.' });
-    if (req.method === 'POST' && url.pathname === '/api/test-judge') {
-      const requestId = requestIdFor(req);
-      logEvent({ level:'INFO', request_id:requestId, stage:'connection_test', message:'Testing Gemini judge connection' });
-      const result = await testGeminiConnection({ apiKey:cfg.geminiApiKey, model:cfg.geminiModel, timeoutMs:Math.min(cfg.timeoutMs || 30000, 12000) });
-      logEvent({ level:result.ok?'INFO':'WARN', request_id:requestId, stage:'connection_test_complete', message:result.ok?'Gemini judge connection test passed':`Gemini judge connection test failed (${result.category})`, elapsed_ms:result.duration_ms });
-      return json(res, result.ok ? 200 : 503, { request_id:requestId, ...result });
-    }
-    if (req.method === 'POST' && url.pathname === '/api/deterministic') {
-      const input = validate(await readBody(req));
-      const requestId = requestIdFor(req);
-      logEvent({ level:'INFO', request_id:requestId, stage:'deterministic', message:'Running deterministic prompt checks' });
-      const result = buildDeterministicResult(input);
-      logEvent({ level:'INFO', request_id:requestId, stage:'deterministic_complete', message:'Deterministic analysis complete', elapsed_ms:result.timing.total_ms });
-      return json(res, 200, { request_id:requestId, ...result });
-    }
-    if (req.method === 'POST' && ['/api/analyze','/api/analyze-stream'].includes(url.pathname)) {
-      const input = validate(await readBody(req));
-      const requestId = requestIdFor(req);
-      const onLog = event => logEvent({ request_id:requestId, ...event });
-      if (url.pathname === '/api/analyze') {
-        const result = await analyzePrompt(input, cfg, { onLog });
-        return json(res, 200, { request_id:requestId, ...result });
-      }
-      res.writeHead(200, { 'Content-Type':'application/x-ndjson; charset=utf-8', 'Cache-Control':'no-store, no-transform', 'X-Content-Type-Options':'nosniff', 'X-Accel-Buffering':'no' });
-      const send = payload => res.write(`${JSON.stringify(payload)}\n`);
-      const onEvent = event => send({ request_id:requestId, ...event });
-      send({ type:'meta', request_id:requestId, version:'1.2.0' });
-      try {
-        const result = await analyzePrompt(input, cfg, { onEvent, onLog });
-        send({ type:'result', request_id:requestId, result:{ request_id:requestId, ...result } });
-      } catch (e) {
-        onLog({ level:'ERROR', stage:'failed', message:'Streaming analysis failed' });
-        send({ type:'error', request_id:requestId, error:'analysis_failed', detail:e instanceof Error?e.message:String(e) });
-      }
-      return res.end();
-    }
-    if (url.pathname.startsWith('/api/')) return json(res, 404, { error:'not_found' });
-
-    let rel = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
-    let target = path.resolve(publicDir, rel);
-    if (!target.startsWith(publicDir)) return json(res, 403, { error:'forbidden' });
-    if (!fs.existsSync(target) || fs.statSync(target).isDirectory()) target = path.join(publicDir, 'index.html');
-    res.writeHead(200, { 'Content-Type':mime[path.extname(target)] || 'application/octet-stream', 'X-Content-Type-Options':'nosniff' });
-    fs.createReadStream(target).pipe(res);
-  } catch (e) {
-    json(res, e.status || 500, { error:e.status?'bad_request':'analysis_failed', detail:e.message });
+  if(req.method==='POST'&&url.pathname==='/api/finalize'){
+    const body=await readBody(req); const input=validate(body.payload); const det=body.deterministic_result || buildDeterministicResult(input);
+    const result=buildHybridResult(input,det,body.judge_result||null,body.judge_meta||{},cfg);
+    logEvent({level:'INFO',request_id:requestId,stage:'complete',message:`Analysis complete: ${result.overall_score}/100`});
+    return json(res,200,{request_id:requestId,...result});
   }
-});
-
-server.listen(cfg.port, '0.0.0.0', () => console.log(`Prompt Quality Analyzer v1.2.0 listening on http://0.0.0.0:${cfg.port} (${cfg.geminiApiKey ? 'Gemini judge enabled' : 'deterministic-only'})`));
+  if(url.pathname.startsWith('/api/'))return json(res,404,{error:'not_found'});
+  let rel=url.pathname==='/'?'index.html':url.pathname.slice(1);let target=path.resolve(publicDir,rel);if(!target.startsWith(publicDir))return json(res,403,{error:'forbidden'});if(!fs.existsSync(target)||fs.statSync(target).isDirectory())target=path.join(publicDir,'index.html');res.writeHead(200,{'Content-Type':mime[path.extname(target)]||'application/octet-stream','X-Content-Type-Options':'nosniff'});fs.createReadStream(target).pipe(res);
+}catch(e){json(res,e.status||500,{error:e.status?'bad_request':'analysis_failed',category:e.category||null,detail:e.message});}});
+server.listen(cfg.port,'0.0.0.0',()=>console.log(`Prompt Quality Analyzer v1.3.0 listening on http://0.0.0.0:${cfg.port} (${cfg.geminiApiKey?'Gemini background judge enabled':'deterministic-only'})`));

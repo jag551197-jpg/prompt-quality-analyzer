@@ -1,13 +1,3 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { analyzePrompt } from '../src/core/analyze.js';
-
-test('analysis emits progress and deterministic fallback without key', async () => {
-  const events=[];
-  const result=await analyzePrompt({prompt:'Tell me the latest tax rules. Always give a definitive answer.',context:'',intendedUse:'Research',requiresCurrentFacts:true},{geminiApiKey:''},{onEvent:e=>events.push(e)});
-  assert.equal(result.mode,'deterministic-only');
-  assert.equal(events[0].stage,'received');
-  assert.equal(events.at(-1).stage,'complete');
-  assert.equal(events.at(-1).progress,100);
-  assert.ok(events.every(e=>typeof e.elapsed_ms==='number'));
-});
+import test from 'node:test';import assert from 'node:assert/strict';import { buildDeterministicResult, buildHybridResult } from '../src/core/analyze.js';
+test('deterministic always returns independently',()=>{const input={prompt:'Tell me the latest tax rules. Always give a definitive answer.',context:'',intendedUse:'Research',requiresCurrentFacts:true};const det=buildDeterministicResult(input);assert.equal(det.mode,'deterministic-only');assert.equal(det.hallucination_risk,'high');});
+test('hybrid combines judge result with deterministic baseline',()=>{const input={prompt:'x',context:'',intendedUse:'General',requiresCurrentFacts:false};const det=buildDeterministicResult(input);const j={scores:{instruction_clarity:90,context_sufficiency:80,grounding_constraints:70,uncertainty_handling:75,output_contract:85,tool_guidance:70,conflict_risk:90,context_efficiency:88},hallucination_risk:'low',strengths:[],weaknesses:[],risk_indicators:[],recommendations:[],improved_prompt:'better',confidence:.9};const r=buildHybridResult(input,det,j,{interaction_id:'int_1',interaction_status:'completed'},{geminiApiKey:'x',geminiModel:'test'});assert.equal(r.mode,'hybrid-gemini');assert.equal(r.judge.interaction_id,'int_1');});

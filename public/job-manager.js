@@ -1,264 +1,44 @@
 import { getMeta, getTransaction, listTransactions, putTransaction, setMeta, updateTransaction } from './idb.js';
 
-export const TERMINAL_STATES = new Set(['complete', 'failed', 'cancelled']);
-const LEASE_MS = 12000;
-const MAX_ATTEMPTS = 3;
-const TAB_ID = crypto.randomUUID();
-const activeControllers = new Map();
-const channel = 'BroadcastChannel' in globalThis ? new BroadcastChannel('pqa-transactions') : null;
+export const TERMINAL_STATES=new Set(['complete','failed','cancelled']);
+const LEASE_MS=12000, MAX_ATTEMPTS=3, POLL_MS=1000, MAX_JUDGE_MS=120000;
+const TAB_ID=crypto.randomUUID(); const activeControllers=new Map();
+const channel='BroadcastChannel'in globalThis?new BroadcastChannel('pqa-transactions'):null;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms)), now=()=>Date.now();
+function logLine(tx,stage,message,level='INFO',extra={}){tx.events||=[];tx.events.push({timestamp:new Date().toISOString(),stage,message,level,...extra});if(tx.events.length>240)tx.events=tx.events.slice(-240);}
+async function notify(tx){channel?.postMessage({type:'transaction-updated',id:tx.id,state:tx.state,updated_at:tx.updated_at});}
+async function saveStage(id,state,stage,message,extra={}){const tx=await updateTransaction(id,t=>{t.state=state;t.stage=stage;Object.assign(t,extra);logLine(t,stage,message,'INFO',extra.log_extra||{});return t;});await notify(tx);return tx;}
+async function acquireLease(id){try{const tx=await updateTransaction(id,t=>{const alive=t.lease_expires_at&&t.lease_expires_at>now();if(alive&&t.lease_owner&&t.lease_owner!==TAB_ID)throw new Error('LEASE_HELD');t.lease_owner=TAB_ID;t.lease_expires_at=now()+LEASE_MS;return t;});return tx.lease_owner===TAB_ID;}catch(e){if(e.message==='LEASE_HELD')return false;throw e;}}
+async function renewLease(id){try{await updateTransaction(id,t=>{if(t.lease_owner===TAB_ID)t.lease_expires_at=now()+LEASE_MS;return t;});}catch{}}
+async function releaseLease(id){try{await updateTransaction(id,t=>{if(t.lease_owner===TAB_ID){t.lease_owner=null;t.lease_expires_at=0;}return t;});}catch{}}
+async function requestJson(url,{method='GET',payload,transactionId,timeoutMs=12000}={}){const c=new AbortController();activeControllers.set(transactionId,c);const timer=setTimeout(()=>c.abort(),timeoutMs);try{const r=await fetch(url,{method,headers:{...(payload?{'Content-Type':'application/json'}:{}),'X-PQA-Transaction-ID':transactionId},body:payload?JSON.stringify(payload):undefined,signal:c.signal});const data=await r.json().catch(()=>({}));if(!r.ok){const e=new Error(data.detail||data.error||`Request failed (${r.status})`);e.status=r.status;e.category=data.category||(r.status===429?'rate_limited':r.status===401||r.status===403?'authentication_failed':'http_error');throw e;}return data;}finally{clearTimeout(timer);if(activeControllers.get(transactionId)===c)activeControllers.delete(transactionId);}}
+async function estimatedJudgeMs(){const samples=(await getMeta('gemini-duration-samples'))||[];if(!samples.length)return 12000;const sorted=samples.slice(-20).filter(Number.isFinite).sort((a,b)=>a-b);return sorted[Math.floor(sorted.length/2)]||12000;}
+async function recordJudgeDuration(ms){if(!Number.isFinite(ms)||ms<=0)return;const samples=(await getMeta('gemini-duration-samples'))||[];samples.push(ms);await setMeta('gemini-duration-samples',samples.slice(-30));}
+function retryDelay(a){return Math.min(12000,1000*(2**Math.max(0,a-1)))+Math.floor(Math.random()*400);}
+export async function createAnalysisTransaction(payload){const id=crypto.randomUUID(),created=now();const tx={id,type:'prompt-analysis',schema_version:2,state:'created',stage:'created',payload,created_at:created,updated_at:created,started_at:null,completed_at:null,deterministic_result:null,final_result:null,attempts:0,retry_at:null,error:null,judge_started_at:null,judge_expected_ms:await estimatedJudgeMs(),gemini_interaction_id:null,gemini_status:null,gemini_submitted_at:null,lease_owner:null,lease_expires_at:0,events:[]};logLine(tx,'created','Analysis transaction created in browser database');await putTransaction(tx);await notify(tx);return tx;}
 
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-const now = () => Date.now();
+async function fallbackComplete(id,e){const cur=await getTransaction(id),det=cur?.deterministic_result;const done=await updateTransaction(id,t=>{t.state=det?'complete':'failed';t.stage=det?'complete_fallback':'failed';t.completed_at=now();t.error={message:e.message,category:e.category||'request_failed',status:e.status||null};if(det)t.final_result={...det,request_id:id,browser_fallback:true,judge:{...(det.judge||{}),status:'fallback',error:e.message,error_category:e.category||'request_failed',http_status:e.status||null,interaction_id:t.gemini_interaction_id||null}};logLine(t,t.stage,det?`Gemini unavailable; preserving deterministic result (${e.category||'request_failed'})`:`Analysis failed (${e.category||'request_failed'})`,det?'WARN':'ERROR');return t;});await notify(done);return Boolean(det);}
 
-function logLine(tx, stage, message, level='INFO', extra={}) {
-  tx.events ||= [];
-  tx.events.push({ timestamp: new Date().toISOString(), stage, message, level, ...extra });
-  if (tx.events.length > 200) tx.events = tx.events.slice(-200);
-}
+export async function executeTransaction(id){const got=await acquireLease(id);if(!got)return false;const leaseTimer=setInterval(()=>renewLease(id),Math.floor(LEASE_MS/3));try{let tx=await getTransaction(id);if(!tx||TERMINAL_STATES.has(tx.state))return true;if(!tx.started_at)await updateTransaction(id,t=>{t.started_at=now();return t;});
+  if(!tx.deterministic_result){await saveStage(id,'deterministic_running','deterministic','Running deterministic prompt checks');const det=await requestJson('/api/deterministic',{method:'POST',payload:tx.payload,transactionId:id,timeoutMs:10000});await updateTransaction(id,t=>{t.deterministic_result=det;t.state='deterministic_complete';t.stage='deterministic_complete';logLine(t,'deterministic_complete',`Deterministic analysis complete: ${det.overall_score}/100`);return t;});await notify(await getTransaction(id));}
+  tx=await getTransaction(id);if(tx.final_result)return true;
 
-async function notify(tx) {
-  channel?.postMessage({ type:'transaction-updated', id:tx.id, state:tx.state, updated_at:tx.updated_at });
-}
-
-async function saveStage(id, state, stage, message, extra={}) {
-  const tx = await updateTransaction(id, t => {
-    t.state = state;
-    t.stage = stage;
-    Object.assign(t, extra);
-    logLine(t, stage, message, 'INFO', extra.log_extra || {});
-    return t;
-  });
-  await notify(tx);
-  return tx;
-}
-
-async function acquireLease(id) {
-  try {
-    const tx = await updateTransaction(id, t => {
-      const leaseAlive = t.lease_expires_at && t.lease_expires_at > now();
-      if (leaseAlive && t.lease_owner && t.lease_owner !== TAB_ID) throw new Error('LEASE_HELD');
-      t.lease_owner = TAB_ID;
-      t.lease_expires_at = now() + LEASE_MS;
-      return t;
-    });
-    return tx.lease_owner === TAB_ID;
-  } catch (e) {
-    if (e.message === 'LEASE_HELD') return false;
-    throw e;
+  // Submit once. On refresh, resume polling the stored Gemini interaction instead of submitting again.
+  if(!tx.gemini_interaction_id){let attempt=Number(tx.attempts||0);while(attempt<MAX_ATTEMPTS){attempt++;try{await updateTransaction(id,t=>{t.attempts=attempt;t.state='judge_submitting';t.stage='judge_submitting';t.judge_started_at=t.judge_started_at||now();t.judge_expected_ms=t.judge_expected_ms||12000;logLine(t,'judge_submitting',`Submitting Gemini background job (attempt ${attempt}/${MAX_ATTEMPTS})`);return t;});await notify(await getTransaction(id));const sub=await requestJson('/api/judge-submit',{method:'POST',payload:(await getTransaction(id)).payload,transactionId:id,timeoutMs:12000});await updateTransaction(id,t=>{t.gemini_interaction_id=sub.interaction_id;t.gemini_status=sub.status;t.gemini_submitted_at=now();t.state='judge_polling';t.stage='judge_polling';logLine(t,'judge_submitted',`Gemini accepted interaction ${sub.interaction_id}; status=${sub.status}`);return t;});await notify(await getTransaction(id));break;}catch(e){const permanent=['authentication_failed','missing_api_key'].includes(e.category)||[400,401,403,413].includes(e.status);if(permanent||attempt>=MAX_ATTEMPTS)return fallbackComplete(id,e);const delay=retryDelay(attempt);await saveStage(id,'retry_wait','retry_wait',`Gemini submission failed; retrying in ${(delay/1000).toFixed(1)}s`,{retry_at:now()+delay});await sleep(delay);}}
   }
-}
 
-async function renewLease(id) {
-  try {
-    await updateTransaction(id, t => {
-      if (t.lease_owner === TAB_ID) t.lease_expires_at = now() + LEASE_MS;
-      return t;
-    });
-  } catch {}
-}
-
-async function releaseLease(id) {
-  try {
-    await updateTransaction(id, t => {
-      if (t.lease_owner === TAB_ID) { t.lease_owner = null; t.lease_expires_at = 0; }
-      return t;
-    });
-  } catch {}
-}
-
-async function postJson(url, payload, transactionId, timeoutMs=45000) {
-  const controller = new AbortController();
-  activeControllers.set(transactionId, controller);
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'X-PQA-Transaction-ID':transactionId },
-      body:JSON.stringify(payload),
-      signal:controller.signal
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      const err = new Error(data.detail || data.error || `Request failed (${res.status})`);
-      err.status = res.status;
-      err.category = data.category || (res.status === 429 ? 'rate_limited' : res.status === 401 || res.status === 403 ? 'authentication_failed' : 'http_error');
-      throw err;
-    }
-    return data;
-  } finally { clearTimeout(timer); if (activeControllers.get(transactionId) === controller) activeControllers.delete(transactionId); }
-}
-
-async function estimatedJudgeMs() {
-  const samples = (await getMeta('gemini-duration-samples')) || [];
-  if (!samples.length) return 8000;
-  const sorted = samples.slice(-20).filter(Number.isFinite).sort((a,b)=>a-b);
-  return sorted[Math.floor(sorted.length/2)] || 8000;
-}
-
-async function recordJudgeDuration(ms) {
-  if (!Number.isFinite(ms) || ms <= 0) return;
-  const samples = (await getMeta('gemini-duration-samples')) || [];
-  samples.push(ms);
-  await setMeta('gemini-duration-samples', samples.slice(-30));
-}
-
-function retryDelay(attempt) {
-  return Math.min(12000, 1000 * (2 ** Math.max(0, attempt - 1))) + Math.floor(Math.random()*400);
-}
-
-export async function createAnalysisTransaction(payload) {
-  const id = crypto.randomUUID();
-  const created = now();
-  const tx = {
-    id, type:'prompt-analysis', schema_version:1,
-    state:'created', stage:'created', payload,
-    created_at:created, updated_at:created,
-    started_at:null, completed_at:null,
-    deterministic_result:null, final_result:null,
-    attempts:0, retry_at:null, error:null,
-    judge_started_at:null, judge_expected_ms:await estimatedJudgeMs(),
-    lease_owner:null, lease_expires_at:0,
-    events:[]
-  };
-  logLine(tx, 'created', 'Analysis transaction created in browser database');
-  await putTransaction(tx); await notify(tx);
-  return tx;
-}
-
-export async function executeTransaction(id) {
-  const gotLease = await acquireLease(id);
-  if (!gotLease) return false;
-  let leaseTimer = setInterval(() => renewLease(id), Math.floor(LEASE_MS/3));
-  try {
-    let tx = await getTransaction(id);
-    if (!tx || TERMINAL_STATES.has(tx.state)) return true;
-    if (!tx.started_at) await updateTransaction(id, t => { t.started_at = now(); return t; });
-
-    if (!tx.deterministic_result) {
-      await saveStage(id, 'deterministic_running', 'deterministic', 'Running deterministic prompt checks');
-      const deterministic = await postJson('/api/deterministic', tx.payload, id, 10000);
-      await updateTransaction(id, t => {
-        t.deterministic_result = deterministic;
-        t.state='deterministic_complete'; t.stage='deterministic_complete';
-        logLine(t, 'deterministic_complete', `Deterministic analysis complete: ${deterministic.overall_score}/100`);
-        return t;
-      });
-      await notify(await getTransaction(id));
-    }
-
-    tx = await getTransaction(id);
-    if (tx.final_result) {
-      await saveStage(id, 'complete', 'complete', 'Analysis already complete', { completed_at: now() });
-      return true;
-    }
-
-    let attempt = Number(tx.attempts || 0);
-    while (attempt < MAX_ATTEMPTS) {
-      attempt += 1;
-      const expected = await estimatedJudgeMs();
-      await updateTransaction(id, t => {
-        t.attempts = attempt; t.state='judge_running'; t.stage='judge_running';
-        t.judge_started_at=now(); t.judge_expected_ms=expected; t.retry_at=null; t.error=null;
-        logLine(t, 'judge_running', `Gemini semantic judge started (attempt ${attempt}/${MAX_ATTEMPTS})`, 'INFO', { attempt });
-        return t;
-      });
-      await notify(await getTransaction(id));
-
-      try {
-        // This request runs asynchronously relative to the UI. IndexedDB is the durable browser ledger;
-        // the UI polls it and is never blocked on this promise.
-        const latest = await getTransaction(id);
-        const full = await postJson('/api/analyze', latest.payload, id, Math.max(45000, expected * 4));
-        const afterCall = await getTransaction(id);
-        if (afterCall?.state === 'cancelled') return false;
-        await recordJudgeDuration(full.judge?.duration_ms || full.timing?.gemini_ms);
-        const done = await updateTransaction(id, t => {
-          t.final_result = full; t.state='complete'; t.stage='complete'; t.completed_at=now();
-          t.error=null; t.retry_at=null;
-          logLine(t, 'judge_complete', full.judge?.status === 'ok' ? `Gemini judge complete in ${full.judge?.duration_ms ?? '—'} ms` : `Gemini unavailable; deterministic fallback (${full.judge?.error_category || full.judge?.status || 'unknown'})`);
-          logLine(t, 'complete', `Analysis complete: ${full.overall_score}/100`);
-          return t;
-        });
-        await notify(done);
-        return true;
-      } catch (e) {
-        const currentAfterError = await getTransaction(id);
-        if (currentAfterError?.state === 'cancelled' || e?.name === 'AbortError') return false;
-        const permanent = ['authentication_failed'].includes(e.category) || [400,401,403,413].includes(e.status);
-        if (permanent || attempt >= MAX_ATTEMPTS) {
-          const fallback = await getTransaction(id);
-          const deterministic = fallback?.deterministic_result;
-          const done = await updateTransaction(id, t => {
-            t.state = deterministic ? 'complete' : 'failed'; t.stage = deterministic ? 'complete_fallback' : 'failed';
-            t.completed_at=now(); t.error={ message:e.message, category:e.category || 'request_failed', status:e.status || null };
-            if (deterministic) t.final_result = { ...deterministic, request_id:id, browser_fallback:true, judge:{ ...(deterministic.judge||{}), status:'fallback', error:e.message, error_category:e.category || 'request_failed', http_status:e.status || null } };
-            logLine(t, t.stage, deterministic ? `Gemini request failed; preserving deterministic result (${e.category || 'request_failed'})` : `Analysis failed (${e.category || 'request_failed'})`, deterministic ? 'WARN' : 'ERROR');
-            return t;
-          });
-          await notify(done);
-          return Boolean(deterministic);
-        }
-        const delay = retryDelay(attempt);
-        const retry = await updateTransaction(id, t => {
-          t.state='retry_wait'; t.stage='retry_wait'; t.retry_at=now()+delay;
-          t.error={ message:e.message, category:e.category || 'request_failed', status:e.status || null };
-          logLine(t, 'retry_wait', `Gemini request failed; retrying in ${(delay/1000).toFixed(1)}s`, 'WARN', { attempt, category:t.error.category });
-          return t;
-        });
-        await notify(retry);
-        let waited=0;
-        while (waited < delay) {
-          await sleep(Math.min(250, delay-waited)); waited += Math.min(250, delay-waited);
-          const current = await getTransaction(id);
-          if (current?.state === 'cancelled') return false;
-        }
-      }
-    }
-    return false;
-  } finally {
-    clearInterval(leaseTimer);
-    await releaseLease(id);
+  tx=await getTransaction(id);if(!tx.gemini_interaction_id)return fallbackComplete(id,Object.assign(new Error('Gemini interaction was not created'),{category:'submit_failed'}));
+  const deadline=(tx.gemini_submitted_at||now())+MAX_JUDGE_MS;
+  while(now()<deadline){const current=await getTransaction(id);if(current?.state==='cancelled')return false;try{const st=await requestJson(`/api/judge-status?interaction_id=${encodeURIComponent(current.gemini_interaction_id)}`,{transactionId:id,timeoutMs:10000});await updateTransaction(id,t=>{t.gemini_status=st.status;t.state='judge_polling';t.stage='judge_polling';logLine(t,'judge_poll',`Gemini status: ${st.status}`);return t;});await notify(await getTransaction(id));
+      if(st.status==='completed'&&st.result){const det=(await getTransaction(id)).deterministic_result;const total=now()-((await getTransaction(id)).gemini_submitted_at||now());const final=await requestJson('/api/finalize',{method:'POST',payload:{payload:(await getTransaction(id)).payload,deterministic_result:det,judge_result:st.result,judge_meta:{interaction_id:st.interaction_id,interaction_status:st.status,usage:st.usage,total_duration_ms:total,http_status:st.http_status}},transactionId:id,timeoutMs:10000});await recordJudgeDuration(total);const done=await updateTransaction(id,t=>{t.final_result=final;t.state='complete';t.stage='complete';t.completed_at=now();t.error=null;logLine(t,'judge_complete',`Gemini background interaction completed in ${(total/1000).toFixed(1)}s`);logLine(t,'complete',`Analysis complete: ${final.overall_score}/100`);return t;});await notify(done);return true;}
+      if(st.terminal&&st.status!=='completed'){const e=Object.assign(new Error(st.error?.message||`Gemini interaction ended ${st.status}`),{category:st.error?.category||`interaction_${st.status}`});return fallbackComplete(id,e);}
+    }catch(e){if(['authentication_failed','interaction_not_found'].includes(e.category))return fallbackComplete(id,e);await updateTransaction(id,t=>{logLine(t,'poll_error',`Gemini status poll failed (${e.category||'request_failed'}); polling will continue`,'WARN');return t;});}
+    await sleep(POLL_MS);
   }
-}
+  return fallbackComplete(id,Object.assign(new Error('Gemini background interaction exceeded maximum wait time'),{category:'judge_timeout'}));
+}finally{clearInterval(leaseTimer);await releaseLease(id);}}
 
-export async function resumePendingTransactions() {
-  const all = await listTransactions(30);
-  const pending = all.filter(t => !TERMINAL_STATES.has(t.state));
-  for (const tx of pending) {
-    if (!tx.lease_expires_at || tx.lease_expires_at < now()) void executeTransaction(tx.id);
-  }
-  return pending;
-}
-
-export async function cancelTransaction(id) {
-  activeControllers.get(id)?.abort();
-  const tx = await updateTransaction(id, t => {
-    if (!TERMINAL_STATES.has(t.state)) {
-      t.state='cancelled'; t.stage='cancelled'; t.completed_at=now();
-      logLine(t, 'cancelled', 'Transaction cancelled by user', 'WARN');
-    }
-    return t;
-  });
-  await notify(tx); return tx;
-}
-
-export function subscribeTransactionUpdates(fn) {
-  if (!channel) return () => {};
-  const handler = e => fn(e.data);
-  channel.addEventListener('message', handler);
-  return () => channel.removeEventListener('message', handler);
-}
-
-export async function getEstimatedProgress(tx) {
-  if (!tx) return { progress:0, eta_ms:null };
-  const fixed = {
-    created:2, deterministic_running:10, deterministic_complete:28,
-    retry_wait:35, complete:100, complete_fallback:100, failed:100, cancelled:100
-  };
-  if (tx.state !== 'judge_running') return { progress: fixed[tx.state] ?? 5, eta_ms: tx.retry_at ? Math.max(0, tx.retry_at-now()) : 0 };
-  const elapsed = Math.max(0, now() - (tx.judge_started_at || now()));
-  const expected = Math.max(1000, tx.judge_expected_ms || 8000);
-  // Estimated progress only; cap at 84% until a real Gemini response is received.
-  const frac = Math.min(0.96, elapsed / expected);
-  return { progress: Math.round(35 + frac * 49), eta_ms: Math.max(0, expected - elapsed), judge_elapsed_ms:elapsed };
-}
+export async function resumePendingTransactions(){const all=await listTransactions(30);const pending=all.filter(t=>!TERMINAL_STATES.has(t.state));for(const tx of pending){if(!tx.lease_expires_at||tx.lease_expires_at<now())void executeTransaction(tx.id);}return pending;}
+export async function cancelTransaction(id){activeControllers.get(id)?.abort();const tx=await updateTransaction(id,t=>{if(!TERMINAL_STATES.has(t.state)){t.state='cancelled';t.stage='cancelled';t.completed_at=now();logLine(t,'cancelled','Transaction cancelled by user','WARN');}return t;});await notify(tx);return tx;}
+export function subscribeTransactionUpdates(fn){if(!channel)return()=>{};const h=e=>fn(e.data);channel.addEventListener('message',h);return()=>channel.removeEventListener('message',h);}
+export async function getEstimatedProgress(tx){if(!tx)return{progress:0,eta_ms:null};const fixed={created:2,deterministic_running:10,deterministic_complete:28,judge_submitting:34,retry_wait:34,complete:100,complete_fallback:100,failed:100,cancelled:100};if(tx.state!=='judge_polling')return{progress:fixed[tx.state]??5,eta_ms:tx.retry_at?Math.max(0,tx.retry_at-now()):0};const elapsed=Math.max(0,now()-(tx.gemini_submitted_at||tx.judge_started_at||now())),expected=Math.max(2000,tx.judge_expected_ms||12000);const frac=Math.min(.96,elapsed/expected);return{progress:Math.round(38+frac*48),eta_ms:Math.max(0,expected-elapsed),judge_elapsed_ms:elapsed};}

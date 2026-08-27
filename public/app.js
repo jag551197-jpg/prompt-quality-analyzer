@@ -47,7 +47,7 @@ async function renderTransaction(tx) {
   $('stage').textContent=stateLabel(tx.stage || tx.state);
   $('progressBar').style.width=`${p.progress}%`;
   $('progressText').textContent=`${p.progress}%`;
-  $('eta').textContent=tx.state==='judge_running' ? fmtMs(p.eta_ms) : tx.state==='retry_wait' ? `retry ${fmtMs(p.eta_ms)}` : TERMINAL_STATES.has(tx.state) ? '—' : fmtMs(p.eta_ms);
+  $('eta').textContent=['judge_submitting','judge_polling'].includes(tx.state) ? fmtMs(p.eta_ms) : tx.state==='retry_wait' ? `retry ${fmtMs(p.eta_ms)}` : TERMINAL_STATES.has(tx.state) ? '—' : fmtMs(p.eta_ms);
   $('attempts').textContent=`${tx.attempts || 0}/3`;
   $('dbState').textContent=stateLabel(tx.state);
   renderEvents(tx);

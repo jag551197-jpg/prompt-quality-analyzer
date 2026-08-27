@@ -58,16 +58,20 @@ See `.env.example`.
 ### `GET /api/health`
 Returns service status and whether a Gemini judge is configured.
 
-### `POST /api/analyze`
+### `POST /api/deterministic`
+Runs the local deterministic analyzer immediately.
 
-```json
-{
-  "prompt": "...",
-  "context": "optional evidence/context",
-  "intendedUse": "RAG / Document Q&A",
-  "requiresCurrentFacts": false
-}
-```
+### `POST /api/judge-submit`
+Submits a true Gemini background interaction and returns `interaction_id` plus the initial Gemini status.
+
+### `GET /api/judge-status?interaction_id=...`
+Polls the stored Gemini interaction. This call does not start a new model generation.
+
+### `POST /api/finalize`
+Combines the persisted deterministic result with the completed Gemini structured judge result.
+
+### `POST /api/test-judge`
+Runs the same background-submit + polling path as production and verifies Gemini connectivity.
 
 ## Scoring dimensions
 
@@ -95,65 +99,25 @@ This repository intentionally does **not** include the commercial AI Reliability
 
 MIT. See `LICENSE`.
 
-## v1.1 real-time diagnostics
 
-The web UI uses `POST /api/analyze-stream` with newline-delimited JSON streaming. It shows real execution stages, elapsed time, estimated ETA, sanitized logs, actual Gemini judge latency, the validated Gemini judge response, and the recommended improved prompt.
+## v1.3 background Gemini architecture
 
-### Test Gemini connectivity
+Gemini generation is no longer held open inside `/api/analyze` and there is no `/api/analyze-stream` endpoint. The browser transaction ledger in IndexedDB performs this durable workflow:
 
-Use **Test Gemini** in the UI, or:
+1. Run `/api/deterministic` and persist/render the result immediately.
+2. Submit `/api/judge-submit`. The server calls Gemini Interactions with `background: true` and `store: true`, then returns the Gemini Interaction ID.
+3. Persist `gemini_interaction_id` in IndexedDB.
+4. Poll `/api/judge-status` every second.
+5. On `completed`, validate the structured Gemini output and call `/api/finalize`.
+6. On refresh/reconnect, resume polling the existing Interaction ID rather than submitting duplicate Gemini work.
+7. On permanent Gemini failure or maximum wait, preserve the deterministic result.
 
-```bash
-curl -X POST http://localhost:3000/api/test-judge
-```
+The UI displays the Gemini interaction status (`queued`, `in_progress`, `completed`, etc.), estimated progress, elapsed time, retries, local event history, and the final judge response/recommended prompt.
 
-Authentication, quota, timeout, network, malformed JSON, and schema errors are categorized without exposing the API key or raw provider error body.
+### Logs
 
-### Logs on Linux
+Linux logs go to stdout and can also be queried through `/api/logs?request_id=<browser-transaction-uuid>`. On Netlify, use **Logs & Metrics → Functions** or `netlify logs --follow` for authoritative platform logs.
 
-Runtime stage logs go to stdout with a request ID. A bounded in-process diagnostic log is also available:
+### Privacy
 
-```bash
-curl 'http://localhost:3000/api/logs?limit=100'
-curl 'http://localhost:3000/api/logs?request_id=<uuid>'
-```
-
-### Logs on Netlify
-
-The active request log is streamed into the web UI. For platform logs, use **Logs & Metrics → Functions** or:
-
-```bash
-netlify logs --follow
-```
-
-`/api/logs` is best-effort on Netlify because serverless instances are ephemeral; Netlify function logs are the authoritative platform log.
-
-### ETA
-
-ETA is an estimate, not a guarantee. `GEMINI_ESTIMATED_MS` controls the initial estimate (default 8000 ms). The UI shows actual elapsed time continuously and displays the observed Gemini and total durations after completion.
-
-## v1.2.0 reliability fix
-The browser no longer depends on response streaming for correctness. It first calls `/api/deterministic` and renders a real deterministic result, then calls `/api/analyze` for the optional Gemini semantic judge. If Gemini is unavailable or invalid, `/api/analyze` returns the deterministic result with a categorized fallback. Streaming remains available as an optional API capability, but the UI does not require it.
-
-## v1.2 durable asynchronous browser jobs
-
-The browser now owns a durable analysis transaction ledger in **IndexedDB**. Each analysis receives a UUID and moves through explicit states: `created`, `deterministic_running`, `deterministic_complete`, `judge_running`, `retry_wait`, and `complete`/`failed`/`cancelled`.
-
-The UI never waits on the Gemini request directly. It polls IndexedDB every 500 ms and renders the latest durable state. Gemini execution runs asynchronously relative to the UI. If the page is refreshed, pending jobs remain visible and are resumed when their browser lease expires. A short IndexedDB lease prevents multiple tabs from executing the same job simultaneously.
-
-Additional reliability behavior:
-
-- deterministic result is persisted before Gemini starts;
-- up to three network/transient retries with exponential backoff and jitter;
-- authentication/validation failures fail open to the deterministic result;
-- historical Gemini durations are stored locally and used as the ETA baseline;
-- progress during Gemini is explicitly estimated and capped until a real response is received;
-- every browser transaction retains a bounded event log;
-- the same transaction UUID is sent to the server as `X-PQA-Transaction-ID`, so Linux logs can be correlated directly;
-- no Netlify-specific storage is required. Netlify remains a deployment adapter only.
-
-### Browser persistence and privacy
-
-To support refresh recovery, the v1.2 browser ledger stores the analysis payload (including prompt/context), results, timestamps, retry state, and bounded browser event log in IndexedDB on that browser. This data is not persisted by the application server. Users can clear it with **Clear History**. Browser storage should still be treated as local persisted data; do not analyze secrets or data that should not remain in the browser profile.
-
-Cancellation aborts the active browser-owned HTTP request when possible and marks the durable transaction cancelled so late responses cannot overwrite that state.
+Refresh recovery requires the prompt/context to remain in browser IndexedDB until the user chooses **Clear History**. The application server does not intentionally persist prompts. Gemini Interactions are submitted with `store: true` because background execution requires stored interactions; retention is controlled by the Google project/tier.
