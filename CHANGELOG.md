@@ -1,3 +1,8 @@
+## 1.5.1 — UI version consistency hotfix
+
+- Fixed stale header version label so UI and runtime/API versions remain synchronized.
+- Synchronized UI header, footer, cache-busting asset versions, API health, server startup, package metadata, and analysis result version.
+
 # Changelog
 
 ## 1.5.0
