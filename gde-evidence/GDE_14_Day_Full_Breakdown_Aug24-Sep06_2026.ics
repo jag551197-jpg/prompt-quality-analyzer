@@ -1,0 +1,132 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//OpenAI//GDE 14-Day Sprint//EN
+CALSCALE:GREGORIAN
+X-WR-CALNAME:GDE 14-Day Readiness Sprint
+BEGIN:VEVENT
+UID:e04464c8-170c-41e1-9aaa-7fed761f816e@gde-sprint
+DTSTART;VALUE=DATE:20260824
+DTEND;VALUE=DATE:20260825
+SUMMARY:Day 1 — Positioning & GDE Evidence Baseline
+DESCRIPTION:OBJECTIVE: Establish the exact GDE specialty\, public narrative\, and evidence baseline.\nTASKS:\n- Select primary positioning: AI/ML Reliability Engineering.\n- Define target audience: developers building production Gemini/Vertex AI systems.\n- Write a 2-3 sentence positioning statement.\n- Audit GitHub\, LinkedIn\, website\, bio\, talks\, articles\, open-source work and Google technology experience.\n- Create an evidence tracker: artifact\, URL\, Google technology\, community benefit\, reach\, status and proof.\n- Identify gaps in technical expertise\, community contribution\, communication and Google technology depth.\n- Create the flagship public repository.\nDELIVERABLES: positioning statement\; evidence tracker\; gap list\; repository\; Day-14 definition of done.\nDONE WHEN: a reviewer can understand your specialty and sprint objective in under two minutes.
+STATUS:CONFIRMED
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:85b35a8a-f969-4cae-8ab8-7fb3184be6d8@gde-sprint
+DTSTART;VALUE=DATE:20260825
+DTEND;VALUE=DATE:20260826
+SUMMARY:Day 2 — AI Reliability Framework Architecture
+DESCRIPTION:OBJECTIVE: Design the flagship AI Reliability Framework before coding.\nTASKS:\n- Define MVP and defer nonessential features.\n- Design Gemini and Vertex AI integration points.\n- Define telemetry: success\, latency\, tokens\, errors\, model/version\, evaluation/grounding hooks and cost where available.\n- Define initial AI SLIs/SLOs.\n- Design OpenTelemetry instrumentation/export path.\n- Define modules\, interfaces\, configuration\, examples\, tests and extension points.\n- Create architecture/request-flow diagrams.\n- Draft README: problem\, audience\, quick start\, architecture\, metrics\, examples\, roadmap and contribution guide.\n- Create Days 3-6 GitHub issues/milestones.\nDELIVERABLES: architecture\; metric/SLO spec\; repo structure\; README skeleton\; MVP backlog.\nDONE WHEN: implementation can start without major architectural decisions.
+STATUS:CONFIRMED
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:1c843c1d-7cbd-474a-a7b0-234a8d473d65@gde-sprint
+DTSTART;VALUE=DATE:20260826
+DTEND;VALUE=DATE:20260827
+SUMMARY:Day 3 — Build MVP Core
+DESCRIPTION:OBJECTIVE: Implement the smallest credible reliability SDK.\nTASKS:\n- Implement instrumentation wrapper/middleware.\n- Capture start/end\, latency\, success/failure and exception type.\n- Capture model/token metadata where available.\n- Create structured event schemas.\n- Add configuration/environment handling.\n- Implement basic reliability aggregation.\n- Test success\, timeout\, exception and malformed-response paths.\n- Add runnable local example.\n- Keep provider interfaces extensible.\nDELIVERABLES: working SDK\; tests\; runnable example\; developer docs.\nDONE WHEN: a developer can instrument a sample AI request and see useful reliability telemetry.
+STATUS:CONFIRMED
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:5e65f871-c0e8-4f45-b700-96df1de324c6@gde-sprint
+DTSTART;VALUE=DATE:20260827
+DTEND;VALUE=DATE:20260828
+SUMMARY:Day 4 — Gemini Integration + AI SLOs
+DESCRIPTION:OBJECTIVE: Make Gemini a first-class reference implementation and demonstrate AI-specific reliability.\nTASKS:\n- Integrate Gemini using the current supported SDK/API.\n- Instrument latency\, errors\, model metadata and token usage where available.\n- Add configurable evaluation/grounding hooks\; do not claim unmeasured hallucination accuracy.\n- Implement sample SLI/SLO calculations.\n- Add examples for availability\, P95 latency\, evaluation pass rate and critical-error rate.\n- Demonstrate an error budget.\n- Test failure scenarios.\n- Document privacy/security and telemetry exclusions.\nDELIVERABLES: Gemini example\; AI SLO example\; failure tests\; metric documentation.\nDONE WHEN: the repository provides materially more value than a basic chatbot.
+STATUS:CONFIRMED
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:e13d9860-b073-4004-bb82-72972762e182@gde-sprint
+DTSTART;VALUE=DATE:20260828
+DTEND;VALUE=DATE:20260829
+SUMMARY:Day 5 — OpenTelemetry + Vertex AI Reference
+DESCRIPTION:OBJECTIVE: Connect the framework to production observability and Google Cloud AI.\nTASKS:\n- Add OpenTelemetry traces/metrics.\n- Define span names and useful attributes.\n- Ensure sensitive prompt/response content is not collected by default.\n- Build a Vertex AI reference example.\n- Use the same reliability abstraction across Gemini/Vertex.\n- Add exporter/example configuration.\n- Test degraded/failed requests.\n- Document local and cloud setup.\n- Capture outputs/screenshots for content.\nDELIVERABLES: OpenTelemetry integration\; Vertex AI example\; sample telemetry\; setup docs.\nDONE WHEN: documented steps take a developer from AI call to reliability telemetry.
+STATUS:CONFIRMED
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:2ef65ba5-7c0d-4e14-932a-0f15e776ac31@gde-sprint
+DTSTART;VALUE=DATE:20260829
+DTEND;VALUE=DATE:20260830
+SUMMARY:Day 6 — Public v0.1 Release
+DESCRIPTION:OBJECTIVE: Turn the project into a credible public open-source artifact.\nTASKS:\n- Run tests and repository cleanup.\n- Complete README and five-minute quick start.\n- Add LICENSE\, CONTRIBUTING\, SECURITY and useful issue templates.\n- Add architecture and example output.\n- Tag/version v0.1.\n- Record a short end-to-end demo.\n- Publish release notes with capabilities\, limitations and roadmap.\n- Verify public links.\n- Ask 2-3 developers to try the quick start and capture friction.\nDELIVERABLES: public v0.1\; quick start\; demo\; release notes\; external feedback.\nDONE WHEN: an unfamiliar developer can discover\, understand\, install and run it.
+STATUS:CONFIRMED
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:41616d5b-fa14-4cb4-b722-5db2e52c134f@gde-sprint
+DTSTART;VALUE=DATE:20260830
+DTEND;VALUE=DATE:20260831
+SUMMARY:Day 7 — Publish Article #1: SRE for AI
+DESCRIPTION:OBJECTIVE: Establish thought leadership around AI reliability.\nTASKS:\n- Publish 'SRE for AI: Why Production AI Needs SLOs and Error Budgets.'\n- Explain why uptime alone is insufficient.\n- Define practical AI SLIs/SLOs without overstating measurement.\n- Include architecture/examples from the project.\n- Include an error-budget example.\n- Cover quality/evaluation\, latency\, availability\, grounding and critical failures.\n- Link runnable GitHub examples.\n- Share with relevant developer communities.\n- Add URL and engagement evidence to tracker.\nDELIVERABLES: deep article\; diagram\; GitHub references\; updated tracker.\nDONE WHEN: the article teaches a reusable engineering approach.
+STATUS:CONFIRMED
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:ab609e3b-db2d-4e0d-a0ec-fb3620ea9f6c@gde-sprint
+DTSTART;VALUE=DATE:20260831
+DTEND;VALUE=DATE:20260901
+SUMMARY:Day 8 — Publish Article #2 + Tutorial
+DESCRIPTION:OBJECTIVE: Prove hands-on Google AI expertise through reproducible teaching.\nTASKS:\n- Publish 'Building an Observable Gemini Application with OpenTelemetry.'\n- Build from minimal app to instrumented app step by step.\n- Explain telemetry choices and privacy defaults.\n- Show traces/metrics mapped to SLIs/SLOs.\n- Include tested repository code.\n- Add troubleshooting.\n- Create companion repo tutorial.\n- Share publicly and track questions.\nDELIVERABLES: article #2\; tutorial\; working example\; feedback log.\nDONE WHEN: another developer can reproduce it without unpublished knowledge.
+STATUS:CONFIRMED
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:ebf999f9-255d-4a7d-8501-ffc9b9c85a05@gde-sprint
+DTSTART;VALUE=DATE:20260901
+DTEND;VALUE=DATE:20260902
+SUMMARY:Day 9 — Vertex AI Deep-Dive + v0.2
+DESCRIPTION:OBJECTIVE: Demonstrate depth beyond a single API demo and iterate from feedback.\nTASKS:\n- Expand Vertex AI implementation.\n- Add one realistic production workflow.\n- Apply v0.1 user feedback.\n- Improve errors\, docs and examples.\n- Add missing tests.\n- Benchmark instrumentation overhead and document methodology.\n- Prepare/publish v0.2.\n- Publish a short technical walkthrough/lab.\nDELIVERABLES: improved Vertex example\; benchmark\; v0.2\; walkthrough.\nDONE WHEN: the repository shows iterative engineering rather than a one-day demo.
+STATUS:CONFIRMED
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:4f87def1-a2b2-4344-88b7-fd0ad5cb0983@gde-sprint
+DTSTART;VALUE=DATE:20260902
+DTEND;VALUE=DATE:20260903
+SUMMARY:Day 10 — Record Two Technical Demos
+DESCRIPTION:OBJECTIVE: Create concise evidence of technical communication.\nTASKS:\n- Demo 1 (5-8 min): AI Reliability Framework in Action.\n- Demo 2 (10-15 min): Gemini/Vertex AI + OpenTelemetry + AI SLOs.\n- Script and test demonstrations first.\n- Show actual code\, telemetry\, failures and SLO behavior.\n- Avoid marketing-only slides.\n- Publish with repository links and prerequisites.\n- Create reusable diagrams/slides.\n- Add URLs/metrics to evidence tracker.\nDELIVERABLES: two public demos\; reusable assets\; updated portfolio.\nDONE WHEN: a reviewer can assess engineering depth and teaching ability.
+STATUS:CONFIRMED
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:db9de08c-9d3b-4f6b-b528-6106dc8ac9c4@gde-sprint
+DTSTART;VALUE=DATE:20260903
+DTEND;VALUE=DATE:20260904
+SUMMARY:Day 11 — Community Talk / GDG Outreach
+DESCRIPTION:OBJECTIVE: Convert technical work into genuine developer-community contribution.\nTASKS:\n- Finalize 25-30 minute talk: 'Beyond Model Accuracy: Reliability Engineering for Production AI.'\n- Include problem\, framework\, demo\, practical takeaways and resources.\n- Contact relevant GDG\, Google Cloud and AI communities.\n- Deliver/record if a slot is available.\n- If scheduling is later\, host a public technical session and secure a future community slot.\n- Capture Q&A and improvements.\n- Publish slides/resources.\nDELIVERABLES: talk deck\; recorded/delivered session or confirmed slot plus public session\; feedback\; evidence.\nDONE WHEN: there is verifiable evidence you are teaching developers.
+STATUS:CONFIRMED
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:ed8f0c22-60cf-4a5d-ae9c-92d5759adadb@gde-sprint
+DTSTART;VALUE=DATE:20260904
+DTEND;VALUE=DATE:20260905
+SUMMARY:Day 12 — Community Contribution & Mentoring
+DESCRIPTION:OBJECTIVE: Demonstrate useful two-way community engagement.\nTASKS:\n- Answer substantive questions in Gemini\, Vertex AI\, observability or AI reliability where qualified.\n- Contribute constructively to relevant open-source issues/discussions.\n- Help at least one developer reproduce or extend the framework.\n- Invite legitimate repository feedback/issues.\n- Turn real questions into FAQs.\n- Identify GDG/university/community collaborations.\n- Track meaningful outcomes rather than vanity metrics.\nDELIVERABLES: documented interactions\; FAQ improvements\; mentoring/helping interaction\; collaboration pipeline.\nDONE WHEN: evidence demonstrates genuine community contribution.
+STATUS:CONFIRMED
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:2a0ad095-2cfb-4cc3-9708-8f73636d7b47@gde-sprint
+DTSTART;VALUE=DATE:20260905
+DTEND;VALUE=DATE:20260906
+SUMMARY:Day 13 — GDE / Googler Relationship Day
+DESCRIPTION:OBJECTIVE: Obtain informed readiness feedback and build authentic relationships.\nTASKS:\n- Identify 8-10 relevant AI/ML\, Google Cloud or adjacent GDEs/Googlers.\n- Research each person's focus.\n- Prioritize contacts where AI reliability is relevant.\n- Prepare one concise portfolio link.\n- Ask for feedback\, not an immediate nomination.\n- Share project\, articles\, tutorials\, talks and community evidence.\n- Ask informed contacts about current GDE expectations/process.\n- Record feedback and fix high-value gaps.\n- Identify 2-3 relationships to continue.\nDELIVERABLES: target list\; personalized outreach\; feedback\; prioritized improvements.\nDONE WHEN: relevant experts can evaluate your work from one portfolio and substantive conversations have begun.
+STATUS:CONFIRMED
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:0d9ab79d-deb0-4b25-b522-4bd1607c5154@gde-sprint
+DTSTART;VALUE=DATE:20260906
+DTEND;VALUE=DATE:20260907
+SUMMARY:Day 14 — GDE Evidence Package & Readiness Review
+DESCRIPTION:OBJECTIVE: Assemble reviewer-ready evidence and decide the next action based on facts.\nTASKS:\n- Create a one-page GDE portfolio/index.\n- Organize evidence: technical expertise\, Google technology depth\, knowledge sharing\, community contribution\, communication and impact.\n- Link repo/releases\, Gemini/Vertex examples\, articles\, tutorials\, videos\, talk\, contributions and profiles.\n- Include only real metrics: users\, stars/forks\, reach\, views\, attendees\, issues\, contributors\, questions answered.\n- Document limitations and a 30/60/90-day growth plan.\n- Test every public link.\n- Compare Day 14 evidence with Day 1 baseline.\n- If expert feedback supports readiness\, begin referral/nomination conversation.\n- Otherwise define the next evidence milestone rather than forcing an application.\nDELIVERABLES: portfolio\; readiness scorecard\; continuation plan\; referral conversation if justified.\nDONE WHEN: a potential sponsor can evaluate candidacy from one page.
+STATUS:CONFIRMED
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

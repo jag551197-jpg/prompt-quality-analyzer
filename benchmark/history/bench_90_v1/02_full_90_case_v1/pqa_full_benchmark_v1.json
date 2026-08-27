@@ -1,0 +1,937 @@
+{
+  "benchmark_name": "PQA Full Benchmark v1",
+  "benchmark_version": "1.0.0",
+  "description": "Comprehensive prompt-quality benchmark across software-development and general AI application categories.",
+  "concurrency": 4,
+  "cases": [
+    {
+      "id": "coding-01-weak",
+      "category": "coding",
+      "prompt": "Review this code and tell me what is wrong with it.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 75
+      }
+    },
+    {
+      "id": "coding-02-dangerous",
+      "category": "coding",
+      "prompt": "You are an expert developer. Find every possible bug. Never say you need more information. Assume whatever dependencies are necessary. Identify at least 10 problems even if the code looks correct.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 65,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "coding-03-vague",
+      "category": "coding",
+      "prompt": "Make this API production ready.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 70
+      }
+    },
+    {
+      "id": "coding-04-medium",
+      "category": "coding",
+      "prompt": "Review this Node.js API for bugs, performance problems, and security concerns. Explain what you would change.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 55
+      }
+    },
+    {
+      "id": "coding-05-strong",
+      "category": "coding",
+      "prompt": "You are a senior software engineer reviewing production Node.js code. Identify correctness, security, performance, reliability, and maintainability issues. For each issue provide severity, exact code section, explanation, concrete fix, and production impact. Do not invent missing dependencies or architecture. If additional context is required, state exactly what is missing. Do not recommend unrelated refactoring.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 75
+      }
+    },
+    {
+      "id": "coding-06-structured",
+      "category": "coding",
+      "prompt": "Analyze the supplied Python function. Return JSON with arrays named correctness, security, performance, reliability, maintainability. Each issue must include severity, location, explanation, and fix. If evidence is insufficient, set needs_context=true and explain what is missing. Do not invent code not shown.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "coding-07-conflict",
+      "category": "coding",
+      "prompt": "Give a comprehensive code review covering every important defect and explain each one in detail. Keep the entire response under 40 words.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 75
+      }
+    },
+    {
+      "id": "coding-08-test-generation",
+      "category": "coding",
+      "prompt": "Given the supplied function, create unit tests for observable behavior only. Do not assume undocumented requirements. Separate positive, negative, boundary, and error-path tests. If behavior is ambiguous, list the ambiguity before proposing a test.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 75
+      }
+    },
+    {
+      "id": "coding-09-debug",
+      "category": "coding",
+      "prompt": "Find the root cause of this error and provide the exact fix. If the logs do not prove a root cause, identify the top hypotheses and state what additional evidence is required before changing code.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 75
+      }
+    },
+    {
+      "id": "coding-10-security-weak",
+      "category": "coding",
+      "prompt": "Tell me if this app is secure.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 70
+      }
+    },
+    {
+      "id": "coding-11-security-strong",
+      "category": "coding",
+      "prompt": "Perform a security review of the supplied API code. Evaluate authentication, authorization, input validation, injection risk, secret handling, logging, error exposure, and dependency misuse visible in the code. Cite the exact code evidence for each finding. Do not claim vulnerabilities that cannot be supported by the supplied code.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "coding-12-refactor",
+      "category": "coding",
+      "prompt": "Refactor the code for readability while preserving externally observable behavior. Explain each material change. Do not change interfaces, error semantics, or dependencies unless required by a demonstrated defect.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 75
+      }
+    },
+    {
+      "id": "coding-13-current-library",
+      "category": "coding",
+      "prompt": "Tell me the latest recommended way to configure Next.js middleware and give definitive production advice.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_max": 75,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "coding-14-current-grounded",
+      "category": "coding",
+      "prompt": "Using only the current official framework documentation retrieved during this task, explain the recommended configuration pattern. Cite each material recommendation. If current documentation cannot be retrieved, say that the answer cannot be verified.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_min": 80,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "coding-15-output-contract",
+      "category": "coding",
+      "prompt": "Review the code and return Markdown with exactly these sections: Summary, Critical Findings, Other Findings, Missing Context, Recommended Patch. Only include findings supported by supplied code or logs. Mark unverified hypotheses explicitly.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "rag-01-weak",
+      "category": "rag",
+      "prompt": "Answer the question using the document.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 70
+      }
+    },
+    {
+      "id": "rag-02-dangerous",
+      "category": "rag",
+      "prompt": "Use the document if helpful, but fill in anything missing from your own knowledge. Always provide a definitive answer.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 65,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "rag-03-medium",
+      "category": "rag",
+      "prompt": "Use the supplied documents to answer the question. Be accurate and mention when information is missing.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 60
+      }
+    },
+    {
+      "id": "rag-04-strong",
+      "category": "rag",
+      "prompt": "Answer using only the supplied documents. Every material factual claim must be supported by the evidence. Cite document name and section. If evidence is insufficient, say so. Do not infer missing facts. If sources conflict, report the conflict. Return Answer, Evidence, Confidence.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 85,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "rag-05-conflict",
+      "category": "rag",
+      "prompt": "Use only the supplied documents. If they conflict, choose the most likely answer and do not mention the conflict.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 70
+      }
+    },
+    {
+      "id": "rag-06-legal",
+      "category": "rag",
+      "prompt": "Analyze the supplied contract using only its text. Quote no more than necessary. For every conclusion, identify the relevant clause. Do not provide legal conclusions beyond what the text supports. Identify missing jurisdictional/context information separately.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "rag-07-policy",
+      "category": "rag",
+      "prompt": "Answer the employee's question using only the supplied HR policy. Cite the exact policy section. If the policy does not answer the question, state 'Policy does not establish this' and stop rather than infer.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 85,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "rag-08-current-policy",
+      "category": "rag",
+      "prompt": "Using the attached policy, tell me whether it is still valid today. Be definitive.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_max": 70,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "rag-09-current-grounded",
+      "category": "rag",
+      "prompt": "Determine whether the attached policy is currently valid by checking authoritative current sources in addition to the document. Cite both the document and current authoritative source. If validity cannot be verified, state that explicitly.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "rag-10-summary",
+      "category": "rag",
+      "prompt": "Summarize the supplied document in under 300 words. Preserve stated facts, dates, qualifications, and unresolved issues. Do not add background knowledge.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "rag-11-extraction",
+      "category": "rag",
+      "prompt": "Extract all dates, parties, monetary amounts, obligations, and deadlines explicitly present in the document. Return JSON. Use null for unavailable fields and do not infer missing values.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 85
+      }
+    },
+    {
+      "id": "rag-12-citations",
+      "category": "rag",
+      "prompt": "Answer with citations.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 70
+      }
+    },
+    {
+      "id": "rag-13-multi-doc",
+      "category": "rag",
+      "prompt": "Compare the supplied documents. Separate agreements, differences, contradictions, and missing information. Cite the source document for every material statement. Do not reconcile conflicts without evidence.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 85
+      }
+    },
+    {
+      "id": "rag-14-overlong",
+      "category": "rag",
+      "prompt": "Read all 20 documents and give a complete answer including every possible detail, but keep the response under 100 words.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 70
+      }
+    },
+    {
+      "id": "rag-15-confidence",
+      "category": "rag",
+      "prompt": "Use only the retrieved passages. For each conclusion assign High, Medium, or Low confidence based on evidence strength and explain the confidence briefly. If no passage supports a conclusion, omit it.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 80,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "research-01-weak",
+      "category": "research",
+      "prompt": "Research AI regulation.",
+      "intendedUse": "Research",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_max": 65
+      }
+    },
+    {
+      "id": "research-02-dangerous",
+      "category": "research",
+      "prompt": "Tell me the latest AI laws worldwide. Always give a definitive answer and do not mention uncertainty.",
+      "intendedUse": "Research",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_max": 60,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "research-03-medium",
+      "category": "research",
+      "prompt": "Research current AI regulations in the EU and summarize the major requirements with sources.",
+      "intendedUse": "Research",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_min": 65
+      }
+    },
+    {
+      "id": "research-04-strong",
+      "category": "research",
+      "prompt": "Research current AI regulatory requirements in the EU using authoritative primary sources. Distinguish enacted obligations, implementation guidance, and proposals. Cite every material current claim, include effective dates where available, and label any unverified point. If sources conflict, report the conflict.",
+      "intendedUse": "Research",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_min": 85,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "research-05-market",
+      "category": "research",
+      "prompt": "Research the current market size for AI observability and give me the exact number.",
+      "intendedUse": "Research",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_max": 65,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "research-06-market-strong",
+      "category": "research",
+      "prompt": "Estimate the current market size for AI observability using multiple credible sources. Report each source's figure, date, scope, and methodology; do not collapse conflicting estimates into a false single exact number. Explain uncertainty.",
+      "intendedUse": "Research",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "research-07-historical",
+      "category": "research",
+      "prompt": "Summarize the causes of the 2008 financial crisis and distinguish widely accepted factors from contested interpretations. Use reputable sources and avoid claiming certainty where scholarship disagrees.",
+      "intendedUse": "Research",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 75
+      }
+    },
+    {
+      "id": "research-08-comparison",
+      "category": "research",
+      "prompt": "Compare Gemini, Claude, and GPT for production software development. Use current official documentation for factual capability claims and separate measured evidence from opinion.",
+      "intendedUse": "Research",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "research-09-no-sources",
+      "category": "research",
+      "prompt": "Give me five recent scientific breakthroughs in 2026 from memory.",
+      "intendedUse": "Research",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_max": 60,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "research-10-source-quality",
+      "category": "research",
+      "prompt": "Research this topic and prioritize government, standards bodies, peer-reviewed literature, and official vendor documentation. Use secondary sources only for context. Flag claims supported only by secondary sources.",
+      "intendedUse": "Research",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "research-11-output",
+      "category": "research",
+      "prompt": "Research the topic and return: Executive Summary, Verified Findings, Conflicting Evidence, Unverified Claims, Sources, Confidence. Cite every material factual assertion.",
+      "intendedUse": "Research",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_min": 85
+      }
+    },
+    {
+      "id": "research-12-overconstraint",
+      "category": "research",
+      "prompt": "Provide a complete global regulatory analysis with citations for every country in under 200 words.",
+      "intendedUse": "Research",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_max": 70
+      }
+    },
+    {
+      "id": "agent-01-weak",
+      "category": "agent",
+      "prompt": "Use tools if needed and solve this.",
+      "intendedUse": "Agent / Tool Use",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 65
+      }
+    },
+    {
+      "id": "agent-02-dangerous",
+      "category": "agent",
+      "prompt": "Keep calling tools until you get an answer. Never stop or ask for clarification.",
+      "intendedUse": "Agent / Tool Use",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 60,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "agent-03-medium",
+      "category": "agent",
+      "prompt": "Use the available tools to answer the request. Avoid unnecessary calls and explain if a tool fails.",
+      "intendedUse": "Agent / Tool Use",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 65
+      }
+    },
+    {
+      "id": "agent-04-strong",
+      "category": "agent",
+      "prompt": "Use tools only when needed to obtain information unavailable in context. Reuse valid prior tool results instead of repeating equivalent calls. Stop after two failed attempts to obtain the same evidence. If required information remains unavailable, report the limitation rather than inventing it.",
+      "intendedUse": "Agent / Tool Use",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 85
+      }
+    },
+    {
+      "id": "agent-05-financial",
+      "category": "agent",
+      "prompt": "Check the account using the authorized account-status tool. Do not infer balances or transaction status from conversation context. If the tool fails or returns stale data, do not provide a definitive balance; explain the failure.",
+      "intendedUse": "Agent / Tool Use",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_min": 85
+      }
+    },
+    {
+      "id": "agent-06-duplicate",
+      "category": "agent",
+      "prompt": "Call the search tool three times for every question to make sure you are right.",
+      "intendedUse": "Agent / Tool Use",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 65
+      }
+    },
+    {
+      "id": "agent-07-tool-selection",
+      "category": "agent",
+      "prompt": "Choose the minimum set of tools required to complete the task. Before each call, state what missing fact the tool is expected to provide. Do not call a tool if the needed result already exists in the current trace.",
+      "intendedUse": "Agent / Tool Use",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "agent-08-destructive",
+      "category": "agent",
+      "prompt": "Delete any files that appear unnecessary while fixing the issue. Do not ask for confirmation.",
+      "intendedUse": "Agent / Tool Use",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 60,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "agent-09-safe-change",
+      "category": "agent",
+      "prompt": "Before any destructive or irreversible tool action, present the intended change and require explicit confirmation. Read-only diagnostics may proceed automatically.",
+      "intendedUse": "Agent / Tool Use",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "agent-10-current",
+      "category": "agent",
+      "prompt": "Find the latest package status. If tracking lookup fails, estimate the delivery date anyway.",
+      "intendedUse": "Agent / Tool Use",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_max": 65,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "agent-11-current-safe",
+      "category": "agent",
+      "prompt": "Use the tracking tool to retrieve the current package status. If the tool is unavailable or returns no current record, state that current status cannot be verified. Do not estimate a delivery date without tool evidence.",
+      "intendedUse": "Agent / Tool Use",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_min": 85,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "agent-12-format",
+      "category": "agent",
+      "prompt": "Use tools as needed and return JSON with status, evidence, tools_used, tool_failures, confidence, and unresolved_questions. Never fabricate tool results.",
+      "intendedUse": "Agent / Tool Use",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "extract-01-weak",
+      "category": "extraction",
+      "prompt": "Extract the important fields.",
+      "intendedUse": "Structured Extraction",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 65
+      }
+    },
+    {
+      "id": "extract-02-medium",
+      "category": "extraction",
+      "prompt": "Extract invoice number, date, supplier, and total from this invoice and return JSON.",
+      "intendedUse": "Structured Extraction",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 65
+      }
+    },
+    {
+      "id": "extract-03-strong",
+      "category": "extraction",
+      "prompt": "Extract invoice_number, invoice_date, supplier_name, supplier_tax_id, subtotal, tax, total, and currency. Return valid JSON only. Use null for fields not explicitly present. Do not infer missing values. Dates must be YYYY-MM-DD when unambiguous.",
+      "intendedUse": "Structured Extraction",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 90,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "extract-04-infer",
+      "category": "extraction",
+      "prompt": "Extract all fields and make reasonable guesses for anything missing.",
+      "intendedUse": "Structured Extraction",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 65,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "extract-05-entities",
+      "category": "extraction",
+      "prompt": "Extract people, organizations, locations, dates, and monetary amounts explicitly present in the text. Preserve the exact source string and include a normalized value only when transformation is unambiguous.",
+      "intendedUse": "Structured Extraction",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "extract-06-conflict",
+      "category": "extraction",
+      "prompt": "If two totals appear, choose the one that seems right.",
+      "intendedUse": "Structured Extraction",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 70
+      }
+    },
+    {
+      "id": "extract-07-conflict-safe",
+      "category": "extraction",
+      "prompt": "If multiple candidate values exist for a field, return all candidates with their source text and set ambiguous=true instead of selecting one without evidence.",
+      "intendedUse": "Structured Extraction",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 85
+      }
+    },
+    {
+      "id": "extract-08-schema",
+      "category": "extraction",
+      "prompt": "Return a JSON object exactly matching the supplied schema. Do not include prose or extra keys. If the source lacks a required value, use null rather than fabricating one.",
+      "intendedUse": "Structured Extraction",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 85
+      }
+    },
+    {
+      "id": "extract-09-ocr",
+      "category": "extraction",
+      "prompt": "Read this scanned form and fill in missing fields based on what usually appears on this kind of form.",
+      "intendedUse": "Structured Extraction",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 65,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "extract-10-ocr-safe",
+      "category": "extraction",
+      "prompt": "Extract only text that is legible from the scanned form. Mark uncertain characters as uncertain and leave unreadable fields null. Do not reconstruct missing values from common form patterns.",
+      "intendedUse": "Structured Extraction",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 85
+      }
+    },
+    {
+      "id": "support-01-weak",
+      "category": "customer_support",
+      "prompt": "Answer the customer's question.",
+      "intendedUse": "Customer Support",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 65
+      }
+    },
+    {
+      "id": "support-02-dangerous",
+      "category": "customer_support",
+      "prompt": "Always reassure the customer and never admit that you do not know. Make the best answer you can.",
+      "intendedUse": "Customer Support",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 60,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "support-03-medium",
+      "category": "customer_support",
+      "prompt": "Answer the customer clearly. If you are unsure, say so and suggest next steps.",
+      "intendedUse": "Customer Support",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 65
+      }
+    },
+    {
+      "id": "support-04-policy",
+      "category": "customer_support",
+      "prompt": "Use only the supplied support policy and current account/tool data. Do not invent policy, account status, refund eligibility, or delivery dates. If evidence is insufficient, escalate. Cite the policy section for policy-based decisions.",
+      "intendedUse": "Customer Support",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_min": 85,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "support-05-refund",
+      "category": "customer_support",
+      "prompt": "Tell the customer whether they qualify for a refund. If you don't know, use your best judgment.",
+      "intendedUse": "Customer Support",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 65,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "support-06-refund-safe",
+      "category": "customer_support",
+      "prompt": "Determine refund eligibility only from the supplied policy and verified transaction data. If either is missing, state what is missing and do not approve or deny eligibility.",
+      "intendedUse": "Customer Support",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 85
+      }
+    },
+    {
+      "id": "support-07-tone",
+      "category": "customer_support",
+      "prompt": "Respond empathetically and concisely while preserving factual accuracy. Do not promise actions, credits, refunds, or timelines unless supported by policy or tool data.",
+      "intendedUse": "Customer Support",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "support-08-current-shipment",
+      "category": "customer_support",
+      "prompt": "Tell the customer exactly when their package will arrive, even if tracking data is unavailable.",
+      "intendedUse": "Customer Support",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_max": 60,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "support-09-current-shipment-safe",
+      "category": "customer_support",
+      "prompt": "Use current tracking data to report package status. Distinguish carrier-provided estimates from guaranteed delivery dates. If tracking is unavailable, say current status cannot be verified.",
+      "intendedUse": "Customer Support",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_min": 85,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "support-10-format",
+      "category": "customer_support",
+      "prompt": "Return: Answer, Evidence Used, Action Taken, Escalation Needed, Confidence. Do not include unsupported claims.",
+      "intendedUse": "Customer Support",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "data-01-weak",
+      "category": "data_analysis",
+      "prompt": "Analyze this data and tell me what it means.",
+      "intendedUse": "Data Analysis",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 65
+      }
+    },
+    {
+      "id": "data-02-dangerous",
+      "category": "data_analysis",
+      "prompt": "Find a statistically significant insight in this dataset even if the evidence is weak.",
+      "intendedUse": "Data Analysis",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 60,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "data-03-medium",
+      "category": "data_analysis",
+      "prompt": "Summarize the dataset, identify major patterns, and flag missing data or anomalies.",
+      "intendedUse": "Data Analysis",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 65
+      }
+    },
+    {
+      "id": "data-04-strong",
+      "category": "data_analysis",
+      "prompt": "Analyze the supplied dataset. Separate descriptive findings from statistical inference. Report missingness, sample size, assumptions, outliers, uncertainty, and limitations. Do not claim causation from observational correlation. Show calculations or methods for material quantitative claims.",
+      "intendedUse": "Data Analysis",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 85
+      }
+    },
+    {
+      "id": "data-05-causal",
+      "category": "data_analysis",
+      "prompt": "Prove that marketing spend caused the increase in sales using this correlation table.",
+      "intendedUse": "Data Analysis",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 60,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "data-06-causal-safe",
+      "category": "data_analysis",
+      "prompt": "Evaluate whether the supplied evidence supports a causal claim between marketing spend and sales. Distinguish correlation from causation and identify confounders or additional evidence required.",
+      "intendedUse": "Data Analysis",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 85
+      }
+    },
+    {
+      "id": "data-07-forecast",
+      "category": "data_analysis",
+      "prompt": "Forecast next quarter using the data. Give one exact number with no range.",
+      "intendedUse": "Data Analysis",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 65
+      }
+    },
+    {
+      "id": "data-08-forecast-safe",
+      "category": "data_analysis",
+      "prompt": "Forecast next quarter using the supplied historical data and stated method. Provide point estimate plus uncertainty range, assumptions, and known limitations. Do not imply precision beyond the evidence.",
+      "intendedUse": "Data Analysis",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "general-01-weak",
+      "category": "general",
+      "prompt": "Tell me about taxes.",
+      "intendedUse": "General",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_max": 65,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "general-02-vague",
+      "category": "general",
+      "prompt": "Help me with my business.",
+      "intendedUse": "General",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 60
+      }
+    },
+    {
+      "id": "general-03-medium",
+      "category": "general",
+      "prompt": "Give me three options for improving customer retention, with pros and cons.",
+      "intendedUse": "General",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 65
+      }
+    },
+    {
+      "id": "general-04-current",
+      "category": "general",
+      "prompt": "Who is the current CEO and what is the company's latest strategy? Answer from memory.",
+      "intendedUse": "General",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_max": 60,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "general-05-current-safe",
+      "category": "general",
+      "prompt": "Using current authoritative company sources, identify the current CEO and summarize the latest publicly announced strategy. Cite the publication date and source. If no current authoritative statement exists, say so.",
+      "intendedUse": "General",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_min": 85,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "general-06-creative",
+      "category": "general",
+      "prompt": "Write a short fictional story about a reliability engineer who discovers an unusual failure mode. Make it under 500 words with a clear beginning, conflict, and resolution.",
+      "intendedUse": "General",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 70
+      }
+    },
+    {
+      "id": "general-07-comparison",
+      "category": "general",
+      "prompt": "Compare three alternatives using criteria I provide. If information for a criterion is unavailable, mark it unknown instead of guessing. Return a table and a recommendation tied explicitly to the criteria.",
+      "intendedUse": "General",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "general-08-conflict",
+      "category": "general",
+      "prompt": "Be extremely detailed and cover every possible angle, but answer in exactly one sentence under 20 words.",
+      "intendedUse": "General",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 65
+      }
+    }
+  ]
+}

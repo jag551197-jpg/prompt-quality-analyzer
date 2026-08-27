@@ -1,0 +1,3 @@
+# Historical reconstruction notice
+
+This Git history was reconstructed from archived PQA release snapshots to preserve the project's engineering evolution. The sequence, source snapshots, benchmark artifacts, and benchmark result evidence are historical artifacts. The Git commit timestamps are the real timestamps of this reconstruction replay and are **not claimed to be the original development timestamps**. Relative delays marked `EXACT_REPORT_DELTA` in `timeline.csv` are derived from archived benchmark report `Generated` timestamps; delays marked `RECONSTRUCTED` are replay intervals because exact original build timestamps were not preserved.

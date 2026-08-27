@@ -1,0 +1,307 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//OpenAI//30-Day GDE Readiness Plan//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:30-Day GDE Readiness Plan
+BEGIN:VEVENT
+UID:gde-readiness-2026-day01@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260824
+DTEND;VALUE=DATE:20260825
+SUMMARY:Day 01 — Define GDE specialty & narrative
+DESCRIPTION:Define positioning: AI/ML + Reliability Engineering; production-grade AI systems. Draft 1-sentence positioning and evidence themes.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day02@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260825
+DTEND;VALUE=DATE:20260826
+SUMMARY:Day 02 — Set up public presence
+DESCRIPTION:Align GitHub, LinkedIn and portfolio around one technical narrative. Create evidence tracker.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day03@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260826
+DTEND;VALUE=DATE:20260827
+SUMMARY:Day 03 — Architect flagship project
+DESCRIPTION:Define AI Reliability Framework architecture, metrics, Gemini/Vertex AI integration and README outline.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day04@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260827
+DTEND;VALUE=DATE:20260828
+SUMMARY:Day 04 — Build Gemini MVP — telemetry
+DESCRIPTION:Implement request telemetry: latency, errors, token usage and structured traces.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day05@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260828
+DTEND;VALUE=DATE:20260829
+SUMMARY:Day 05 — Build Gemini MVP — reliability
+DESCRIPTION:Add quality/grounding evaluation, SLO definitions and error-budget concepts.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day06@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260829
+DTEND;VALUE=DATE:20260830
+SUMMARY:Day 06 — Build Gemini MVP — polish
+DESCRIPTION:Add OpenTelemetry instrumentation, tests, examples and documentation.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day07@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260830
+DTEND;VALUE=DATE:20260831
+SUMMARY:Day 07 — Release v0.1 publicly
+DESCRIPTION:Publish GitHub release, architecture diagram and 5-minute demo. Record baseline metrics.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day08@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260831
+DTEND;VALUE=DATE:20260901
+SUMMARY:Day 08 — Article #1 — outline & evidence
+DESCRIPTION:Draft SRE for AI: Why Production AI Needs SLOs and Error Budgets. Ground claims and examples.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day09@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260901
+DTEND;VALUE=DATE:20260902
+SUMMARY:Day 09 — Article #1 — technical draft
+DESCRIPTION:Complete diagrams, examples and practical SLO/error-budget model.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day10@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260902
+DTEND;VALUE=DATE:20260903
+SUMMARY:Day 10 — Publish Article #1
+DESCRIPTION:Publish and share to relevant developer communities; capture engagement evidence.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day11@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260903
+DTEND;VALUE=DATE:20260904
+SUMMARY:Day 11 — Article #2 — Gemini observability
+DESCRIPTION:Build hands-on example: observable Gemini application with OpenTelemetry.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day12@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260904
+DTEND;VALUE=DATE:20260905
+SUMMARY:Day 12 — Publish Article #2
+DESCRIPTION:Publish reproducible tutorial with code, screenshots and repository links.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day13@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260905
+DTEND;VALUE=DATE:20260906
+SUMMARY:Day 13 — Vertex AI reference implementation
+DESCRIPTION:Add Vertex AI deployment/example and instrument it with the reliability framework.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day14@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260906
+DTEND;VALUE=DATE:20260907
+SUMMARY:Day 14 — Publish end-to-end tutorial
+DESCRIPTION:Create setup-to-dashboard walkthrough; update docs and demo materials.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day15@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260907
+DTEND;VALUE=DATE:20260908
+SUMMARY:Day 15 — Prepare community talk
+DESCRIPTION:Build 25–30 minute talk: Beyond Model Accuracy — Reliability Engineering for AI.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day16@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260908
+DTEND;VALUE=DATE:20260909
+SUMMARY:Day 16 — Rehearse & finalize talk
+DESCRIPTION:Rehearse, tighten story, validate live demo, publish slides/repository links.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day17@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260909
+DTEND;VALUE=DATE:20260910
+SUMMARY:Day 17 — Deliver public talk #1
+DESCRIPTION:Deliver/record a GDG, meetup, university or webinar session; capture attendance and feedback.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day18@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260910
+DTEND;VALUE=DATE:20260911
+SUMMARY:Day 18 — Community follow-up
+DESCRIPTION:Answer questions, share resources, publish recording and document developer feedback.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day19@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260911
+DTEND;VALUE=DATE:20260912
+SUMMARY:Day 19 — Deliver/secure talk #2
+DESCRIPTION:Deliver a second session or secure a confirmed date; tailor to Google AI/Cloud audience.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day20@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260912
+DTEND;VALUE=DATE:20260913
+SUMMARY:Day 20 — Mentor & engage developers
+DESCRIPTION:Help developers through issues/Q&A; review PRs/issues and document concrete community impact.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day21@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260913
+DTEND;VALUE=DATE:20260914
+SUMMARY:Day 21 — Weekly evidence review
+DESCRIPTION:Audit technical expertise, knowledge sharing, community impact and Google ecosystem evidence. Close gaps.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day22@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260914
+DTEND;VALUE=DATE:20260915
+SUMMARY:Day 22 — Demo video #1 — Gemini
+DESCRIPTION:Record a concise Gemini + AI Reliability Framework demonstration.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day23@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260915
+DTEND;VALUE=DATE:20260916
+SUMMARY:Day 23 — Demo video #2 — Vertex AI
+DESCRIPTION:Record a concise Vertex AI deployment/observability demonstration.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day24@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260916
+DTEND;VALUE=DATE:20260917
+SUMMARY:Day 24 — Advanced learning content
+DESCRIPTION:Publish a deep-dive/best-practices guide derived from questions and project learnings.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day25@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260917
+DTEND;VALUE=DATE:20260918
+SUMMARY:Day 25 — Update GitHub & documentation
+DESCRIPTION:Polish README, architecture, examples, contribution guide, issues and release notes.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day26@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260918
+DTEND;VALUE=DATE:20260919
+SUMMARY:Day 26 — Identify GDE/Googler network
+DESCRIPTION:Identify 8–10 relevant AI/ML, Cloud and developer-relations contacts. Prioritize fit over volume.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day27@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260919
+DTEND;VALUE=DATE:20260920
+SUMMARY:Day 27 — Request portfolio feedback
+DESCRIPTION:Approach selected GDEs/Googlers for specific feedback on technical/community evidence—not a cold nomination ask.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day28@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260920
+DTEND;VALUE=DATE:20260921
+SUMMARY:Day 28 — Assemble GDE evidence portfolio
+DESCRIPTION:Create one-page evidence map: projects, Google tech, articles, talks, mentoring, metrics and links.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day29@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260921
+DTEND;VALUE=DATE:20260922
+SUMMARY:Day 29 — GDE readiness review
+DESCRIPTION:Score portfolio against official criteria: Google technology expertise, significant community contribution, communication and referral readiness.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:gde-readiness-2026-day30@openai.local
+DTSTAMP:20260823T204100Z
+DTSTART;VALUE=DATE:20260922
+DTEND;VALUE=DATE:20260923
+SUMMARY:Day 30 — Start nomination conversation
+DESCRIPTION:Share evidence package with strongest relationships and ask whether the profile is ready for referral/nomination. Capture gaps and next actions.\n\n30-day objective: build credible public evidence for a GDE/Googler referral. Official GDE criteria emphasize Google-technology expertise, significant developer-community contributions, clear communication, and referral by a Googler or existing GDE.
+CATEGORIES:GDE,AI/ML,Google Developer,Professional Development
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR

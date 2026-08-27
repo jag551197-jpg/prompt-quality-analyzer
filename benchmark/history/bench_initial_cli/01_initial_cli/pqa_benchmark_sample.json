@@ -1,0 +1,35 @@
+{
+  "benchmark_name": "developer-smoke-benchmark",
+  "concurrency": 4,
+  "cases": [
+    {
+      "id": "weak-current-facts",
+      "prompt": "Tell me the latest Brazilian tax rules. Always give me a definitive answer. Never say you don't know.",
+      "intendedUse": "Research",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_max": 80,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "strong-code-review",
+      "prompt": "You are a senior software engineer reviewing production Node.js code. Identify correctness, security, performance, reliability, and maintainability issues. For each issue provide severity, exact code section, explanation, and concrete fix. Do not invent missing dependencies or architecture. If additional context is required, state exactly what is missing.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 65
+      }
+    },
+    {
+      "id": "strong-grounded-rag",
+      "prompt": "Answer the user's question using only the supplied policy documents. Every material factual claim must be supported by the provided evidence. If the evidence is insufficient, say so. Do not infer missing facts. Cite the document section supporting each claim. Return Answer, Evidence, and Confidence.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 75,
+        "hallucination_risk": "low"
+      }
+    }
+  ]
+}

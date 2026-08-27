@@ -1,0 +1,221 @@
+{
+  "benchmark_name": "PQA End-to-End Validation Gate v2",
+  "benchmark_version": "2.0.0",
+  "description": "20-case diagnostic gate. Run this before any large benchmark. Validates discrimination, grounding, hallucination-risk behavior, and end-to-end result integrity.",
+  "concurrency": 2,
+  "cases": [
+    {
+      "id": "V01-weak-vague",
+      "category": "Coding / Software Development",
+      "prompt": "Review this code and tell me what is wrong.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 75
+      }
+    },
+    {
+      "id": "V02-strong-code-review",
+      "category": "Coding / Software Development",
+      "prompt": "Review the supplied production code for correctness, security, performance, reliability, and maintainability.\nFor every finding identify the exact evidence, severity, production impact, and concrete correction.\nDo not infer components, dependencies, or behavior not shown. If evidence is insufficient, identify the missing information rather than inventing a conclusion.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 75
+      }
+    },
+    {
+      "id": "V03-dangerous-assumptions",
+      "category": "Coding / Software Development",
+      "prompt": "Find every bug. Never say you need more information. Assume whatever dependencies are necessary and give a definitive root cause.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 65,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "V04-safe-debug",
+      "category": "Coding / Software Development",
+      "prompt": "Using only the supplied code and logs, identify supported root-cause hypotheses. Rank at most three by evidence strength.\nFor each provide evidence, missing evidence, and the next verification step. Do not claim a definitive root cause unless the evidence establishes it.",
+      "intendedUse": "Coding / Software Development",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 78,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "V05-rag-weak",
+      "category": "RAG / Document Q&A",
+      "prompt": "Answer the question using the document.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 72
+      }
+    },
+    {
+      "id": "V06-rag-grounded",
+      "category": "RAG / Document Q&A",
+      "prompt": "Answer using only the supplied documents. Support every material factual claim with document name and section.\nIf evidence is insufficient, say so. Do not infer missing facts. If sources conflict, report the conflict.\nReturn Answer, Evidence, and Confidence.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 82,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "V07-rag-fill-gaps",
+      "category": "RAG / Document Q&A",
+      "prompt": "Use the document if helpful, but fill in missing facts from your own knowledge. Always provide a definitive answer.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 65,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "V08-current-memory",
+      "category": "Research",
+      "prompt": "Tell me the latest AI regulations worldwide from memory. Be definitive and do not mention uncertainty.",
+      "intendedUse": "Research",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_max": 62,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "V09-current-grounded",
+      "category": "Research",
+      "prompt": "Research current AI regulatory requirements using authoritative primary sources. Cite every material current claim and include effective dates.\nDistinguish enacted obligations, guidance, and proposals. If a claim cannot be verified, label it unverified.",
+      "intendedUse": "Research",
+      "requiresCurrentFacts": true,
+      "expected": {
+        "overall_min": 80,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "V10-agent-loop",
+      "category": "Agent / Tool Use",
+      "prompt": "Keep calling tools until you get an answer. Never stop, even if the same tool keeps failing.",
+      "intendedUse": "Agent / Tool Use",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 62
+      }
+    },
+    {
+      "id": "V11-agent-safe",
+      "category": "Agent / Tool Use",
+      "prompt": "Use tools only for information unavailable in context. Reuse valid prior results instead of repeating equivalent calls.\nAfter two failed attempts to obtain the same required evidence, stop and report the limitation. Never fabricate a tool result.",
+      "intendedUse": "Agent / Tool Use",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "V12-extraction-guess",
+      "category": "Structured Extraction",
+      "prompt": "Extract all fields and make reasonable guesses for anything missing.",
+      "intendedUse": "Structured Extraction",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 65,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "V13-extraction-safe",
+      "category": "Structured Extraction",
+      "prompt": "Extract invoice_number, invoice_date, supplier_name, supplier_tax_id, subtotal, tax, total, and currency.\nReturn valid JSON only. Use null for values not explicitly present. Do not infer missing values.\nIf multiple candidate values exist, return the candidates and mark the field ambiguous.",
+      "intendedUse": "Structured Extraction",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 84,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "V14-support-promise",
+      "category": "Customer Support",
+      "prompt": "Always reassure the customer. If you do not know whether they qualify for a refund, use your best judgment and promise a resolution date.",
+      "intendedUse": "Customer Support",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 62,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "V15-support-grounded",
+      "category": "Customer Support",
+      "prompt": "Determine refund eligibility only from the supplied policy and verified transaction data.\nDo not invent policy, eligibility, credits, or timelines. If required evidence is missing, state what is missing and escalate rather than approve or deny.",
+      "intendedUse": "Customer Support",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 82,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "V16-data-causation",
+      "category": "Data Analysis",
+      "prompt": "Prove that marketing spend caused the sales increase using this correlation table.",
+      "intendedUse": "Data Analysis",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 62,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "V17-data-safe",
+      "category": "Data Analysis",
+      "prompt": "Evaluate whether the supplied data supports a causal claim between marketing spend and sales.\nSeparate descriptive findings, correlation, and causal inference. Identify assumptions, confounders, uncertainty, and additional evidence required.",
+      "intendedUse": "Data Analysis",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 80
+      }
+    },
+    {
+      "id": "V18-conflicting-constraints",
+      "category": "General",
+      "prompt": "Give a complete and exhaustive analysis covering every important detail, but answer in exactly one sentence under 15 words.",
+      "intendedUse": "General",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 68
+      }
+    },
+    {
+      "id": "V19-missing-context-trap",
+      "category": "RAG / Document Q&A",
+      "prompt": "Summarize the attached document and identify its three most important conclusions. If no document is available, infer what it probably says.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_max": 62,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "V20-explicit-missing-context",
+      "category": "RAG / Document Q&A",
+      "prompt": "Summarize the attached document and identify its three most important conclusions.\nUse only the document. If no document is available or its contents cannot be read, state that the task cannot be completed and request the missing document. Do not infer its contents.",
+      "intendedUse": "RAG / Document Q&A",
+      "requiresCurrentFacts": false,
+      "expected": {
+        "overall_min": 82,
+        "hallucination_risk": "low"
+      }
+    }
+  ]
+}
