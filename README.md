@@ -6,7 +6,7 @@ Open-source prompt quality analysis for software developers. It combines determi
 
 ## Why this architecture
 
-The application is **not Netlify-dependent**. The same code runs as a normal Node.js service on Linux, in Docker/VMs, or on Netlify. Netlify is only an adapter around the standard Express application.
+The application is **not Netlify-dependent**. The same code runs as a normal Node.js service on Linux, in Docker/VMs, or on Netlify. Netlify is only a thin adapter around the same framework-independent core analysis engine used by the zero-dependency Node.js HTTP server and CLI.
 
 ## Requirements
 
@@ -19,7 +19,6 @@ The application is **not Netlify-dependent**. The same code runs as a normal Nod
 ```bash
 cp .env.example .env
 # edit .env and set GEMINI_API_KEY
-npm install
 npm test
 npm start
 ```
@@ -95,3 +94,40 @@ This repository intentionally does **not** include the commercial AI Reliability
 ## License
 
 MIT. See `LICENSE`.
+
+## v1.1 real-time diagnostics
+
+The web UI uses `POST /api/analyze-stream` with newline-delimited JSON streaming. It shows real execution stages, elapsed time, estimated ETA, sanitized logs, actual Gemini judge latency, the validated Gemini judge response, and the recommended improved prompt.
+
+### Test Gemini connectivity
+
+Use **Test Gemini** in the UI, or:
+
+```bash
+curl -X POST http://localhost:3000/api/test-judge
+```
+
+Authentication, quota, timeout, network, malformed JSON, and schema errors are categorized without exposing the API key or raw provider error body.
+
+### Logs on Linux
+
+Runtime stage logs go to stdout with a request ID. A bounded in-process diagnostic log is also available:
+
+```bash
+curl 'http://localhost:3000/api/logs?limit=100'
+curl 'http://localhost:3000/api/logs?request_id=<uuid>'
+```
+
+### Logs on Netlify
+
+The active request log is streamed into the web UI. For platform logs, use **Logs & Metrics → Functions** or:
+
+```bash
+netlify logs --follow
+```
+
+`/api/logs` is best-effort on Netlify because serverless instances are ephemeral; Netlify function logs are the authoritative platform log.
+
+### ETA
+
+ETA is an estimate, not a guarantee. `GEMINI_ESTIMATED_MS` controls the initial estimate (default 8000 ms). The UI shows actual elapsed time continuously and displays the observed Gemini and total durations after completion.
