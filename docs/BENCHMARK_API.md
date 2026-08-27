@@ -4,6 +4,17 @@
 
 The benchmark API provides repeatable prompt-quality regression testing for local Linux runs, Netlify, CI pipelines, and external automation. It is intentionally stateless so correctness never depends on serverless instance memory.
 
+## Authentication
+
+Both benchmark endpoints require `Authorization: Bearer <PQA_API_TOKEN>`. Set the same secret on the deployed server/Netlify site and in the automation environment.
+
+```bash
+export PQA_API_TOKEN='your-long-random-secret'
+npm run benchmark -- examples/benchmark-smoke.json https://your-site.example
+```
+
+The token is never included in the benchmark manifest and must never be committed to source control.
+
 ## Workflow
 
 1. `POST /api/benchmark-submit` with a suite of up to 25 cases.
@@ -45,7 +56,7 @@ Each Gemini case is submitted as a stored background interaction. The manifest c
 
 ## Limits
 
-- Maximum 25 cases per submission batch in v1.4.0.
+- Maximum 25 cases per submission batch in v1.4.1.
 - Maximum concurrency 8; default 4.
 - Large benchmark suites should be sharded into batches by the caller.
 - A deterministic-only run remains valid when Gemini is not configured.

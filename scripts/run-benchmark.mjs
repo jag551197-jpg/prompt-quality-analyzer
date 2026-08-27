@@ -2,8 +2,9 @@ import fs from 'node:fs/promises';
 
 const [,, file='examples/benchmark-smoke.json', base=process.env.PQA_BASE_URL||'http://localhost:3000'] = process.argv;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const apiToken=process.env.PQA_API_TOKEN||'';
 async function jfetch(path,opts={}){
-  const r=await fetch(new URL(path,base),{...opts,headers:{'content-type':'application/json',...(opts.headers||{})}});
+  const r=await fetch(new URL(path,base),{...opts,headers:{'content-type':'application/json',...(apiToken?{authorization:`Bearer ${apiToken}`}:{ } ),...(opts.headers||{})}});
   const body=await r.json().catch(()=>({}));
   if(!r.ok) throw new Error(`${r.status} ${path}: ${JSON.stringify(body)}`);
   return body;

@@ -122,9 +122,35 @@ Linux logs go to stdout and can also be queried through `/api/logs?request_id=<b
 
 Refresh recovery requires the prompt/context to remain in browser IndexedDB until the user chooses **Clear History**. The application server does not intentionally persist prompts. Gemini Interactions are submitted with `store: true` because background execution requires stored interactions; retention is controlled by the Google project/tier.
 
+## API authentication
+
+Protected automation/admin endpoints require an application bearer token. Configure a long random value as:
+
+```bash
+PQA_API_TOKEN=<long-random-secret>
+```
+
+The following endpoints are protected by default in v1.4.1:
+
+- `POST /api/benchmark-submit`
+- `POST /api/benchmark-status`
+- `GET /api/logs`
+
+Send the token as:
+
+```http
+Authorization: Bearer <PQA_API_TOKEN>
+```
+
+The benchmark CLI automatically reads `PQA_API_TOKEN` from its environment. The browser server-log viewer asks for an administrator token per request and does not persist it.
+
+For private deployments, set `PQA_PROTECT_ANALYSIS=true` to require the same bearer token for `/api/deterministic`, `/api/judge-submit`, `/api/judge-status`, and `/api/finalize`. Leave it `false` for the public open-source demo because embedding an API secret in browser JavaScript would defeat the protection.
+
+If `PQA_API_TOKEN` is missing, protected endpoints fail closed with `503 api_token_not_configured`. Missing or invalid bearer credentials return `401 unauthorized`.
+
 ## Automated benchmark API
 
-v1.4.0 includes a stateless benchmark API suitable for Netlify, Linux, GitHub Actions, and other CI systems.
+v1.4.1 includes a stateless benchmark API suitable for Netlify, Linux, GitHub Actions, and other CI systems.
 
 ### Submit a batch
 
