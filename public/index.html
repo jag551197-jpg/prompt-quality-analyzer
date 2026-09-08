@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>PQA Community — AI Instruction Reliability</title>
   <meta name="description" content="PQA evaluates AI instructions for quality, ambiguity, unsupported assumptions and hallucination risk before execution.">
-  <link rel="stylesheet" href="/styles.css?v=1.7.1">
+  <link rel="stylesheet" href="/styles.css?v=1.8.0">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 </head>
 <body>
@@ -23,7 +23,7 @@
     </nav>
     <div class="sidebar-meta">
       <span class="status-dot"></span><span>Engine ready</span>
-      <small>PQA v1.7.1</small>
+      <small>PQA v1.8.0</small>
       <small>Benchmark v4.1</small>
     </div>
   </aside>
@@ -43,7 +43,7 @@
 
     <main>
       <section id="benchmark" class="release-strip">
-        <div><span>ENGINE</span><b>v1.7.1</b></div>
+        <div><span>ENGINE</span><b>v1.8.0</b></div>
         <div><span>BENCHMARK</span><b>v4.1 · 300 cases</b></div>
         <div><span>RISK MODEL</span><b>Evidence-tiered v3</b></div>
         <div><span>MODE</span><b>Prompt-first · repo optional</b></div>
@@ -54,6 +54,18 @@
         <article class="metric-card"><div><span>HALLUCINATION RISK</span><b id="riskCard">—</b></div><small id="riskCardSub">Awaiting evaluation</small></article>
         <article class="metric-card"><div><span>CONFIDENCE</span><b id="confidenceCard">—</b></div><small id="confidenceCardSub">Score confidence</small></article>
         <article class="metric-card"><div><span>LOCAL TREND</span><b id="trendValue">—</b></div><small id="trendSub">Recent browser analyses</small></article>
+      </section>
+
+      <section id="efficiencyWallet" class="surface efficiency-wallet">
+        <div class="wallet-head"><div><p class="eyebrow">ESTIMATED EFFICIENCY WALLET</p><h2>Value unlocked by better instructions</h2></div><span class="badge neutral">PQA Savings Model v1.0</span></div>
+        <div class="wallet-grid">
+          <div class="wallet-primary"><span>ESTIMATED TOKENS SAVED</span><b id="walletTokens">0</b><small id="walletPrompts">0 improvements generated</small></div>
+          <div><span>AI COST AVOIDED</span><b id="walletCost">$0.00</b><small>estimated</small></div>
+          <div><span>RETRIES AVOIDED</span><b id="walletRetries">0.00</b><small>expected corrective cycles</small></div>
+          <div><span>CONFIDENCE</span><b>MODELED</b><small>not measured provider billing</small></div>
+        </div>
+        <div class="wallet-actions"><select id="walletPeriod"><option value="all">All time</option><option value="month">This month</option><option value="today">Today</option></select><button id="walletMethod" class="button ghost compact">Methodology</button><button id="walletReset" class="button ghost compact">Reset wallet</button></div>
+        <p id="walletNote" class="privacy">Savings are estimates based on instruction quality, expected retries, task complexity and a configurable token-price profile. They are not guaranteed billing reductions.</p>
       </section>
 
       <section class="trend-panel surface">
@@ -126,7 +138,7 @@
         <div class="surface">
           <div class="section-title"><div><p class="eyebrow">AUDITABILITY</p><h2>Evaluation provenance</h2></div><span class="badge success">TRACEABLE</span></div>
           <dl class="audit-list">
-            <div><dt>PQA engine</dt><dd id="auditEngine">v1.7.1</dd></div>
+            <div><dt>PQA engine</dt><dd id="auditEngine">v1.8.0</dd></div>
             <div><dt>Rubric</dt><dd id="auditRubric">—</dd></div>
             <div><dt>Risk model</dt><dd id="auditRiskModel">evidence-tiered-v3</dd></div>
             <div><dt>Scoring profile</dt><dd id="auditProfile">—</dd></div>
@@ -153,9 +165,9 @@
       </section>
     </main>
 
-    <footer>PQA v1.7.1 · Benchmark v4.1 · Prompt-level risk indicators are engineering signals, not guarantees of model behavior.</footer>
+    <footer>PQA v1.8.0 · Benchmark v4.1 · Prompt-level risk indicators are engineering signals, not guarantees of model behavior.</footer>
   </div>
 </div>
-<script type="module" src="/app.js?v=1.7.1"></script>
+<script type="module" src="/app.js?v=1.8.0"></script>
 </body>
 </html>

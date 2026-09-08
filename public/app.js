@@ -1,4 +1,5 @@
 import {getLanguage,getLocale,languageInstruction,installLanguageUI} from './i18n.js';
+import { estimateSavings, recordSavings, walletSummary, resetWallet, loadPricing, MODEL_VERSION } from './savings.js';
 import { clearTransactions, getTransaction, listTransactions } from './idb.js';
 import { cancelTransaction, createAnalysisTransaction, executeTransaction, getEstimatedProgress, resumePendingTransactions, subscribeTransactionUpdates, TERMINAL_STATES } from './job-manager.js';
 
@@ -9,6 +10,21 @@ let activeId = null;
 let pollTimer = null;
 let elapsedTimer = null;
 let lastRenderedUpdate = 0;
+
+
+function money(v){return `$${Number(v||0).toFixed(2)}`}
+function renderWallet(){
+ const w=walletSummary($('walletPeriod')?.value||'all');
+ $('walletTokens').textContent=Number(w.token_savings||0).toLocaleString();
+ $('walletCost').textContent=money(w.ai_cost_saved_usd);
+ $('walletRetries').textContent=Number(w.retry_savings||0).toFixed(2);
+ $('walletPrompts').textContent=`${w.count} improvement${w.count===1?'':'s'} generated`;
+}
+function maybeRecordSavings(tx){
+ const r=tx?.final_result; if(!r?.improved_prompt||!tx?.payload?.prompt)return;
+ const est=estimateSavings({prompt:tx.payload.prompt,improvedPrompt:r.improved_prompt,score:r.overall_score,risk:r.hallucination_risk,intendedUse:tx.payload.intendedUse,reasonCodes:r.reason_codes||[],pricing:loadPricing()});
+ if(recordSavings(tx.id,{use_case:tx.payload.intendedUse||'General',risk:r.hallucination_risk,score:r.overall_score},est))renderWallet();
+}
 
 function list(el, items, empty) {
   el.innerHTML='';
@@ -51,7 +67,7 @@ function renderResult(r) {
   $('improved').value=r.improved_prompt || '';
   $('reanalyze').disabled=!r.improved_prompt;
   $('disclaimer').textContent=(r.disclaimer || '') + (r.judge?.error ? ` Judge fallback: ${r.judge.error}` : '');
-  $('auditEngine').textContent=`v${r.version||'1.7.1'}`;
+  $('auditEngine').textContent=`v${r.version||'1.8.0'}`;
   $('auditRubric').textContent=r.rubric_version || '—';
   $('auditRiskModel').textContent=r.calibration?.risk_model || 'evidence-tiered-v3';
   $('auditProfile').textContent=r.scoring_profile || r.calibration?.profile || '—';
@@ -80,7 +96,7 @@ async function renderTransaction(tx) {
   renderEvents(tx);
   renderResult(tx.final_result || tx.deterministic_result);
   $('cancel').disabled=TERMINAL_STATES.has(tx.state);
-  if (TERMINAL_STATES.has(tx.state)) { btn.disabled=false; btn.textContent='Analyze Prompt'; }
+  if (TERMINAL_STATES.has(tx.state)) { maybeRecordSavings(tx); btn.disabled=false; btn.textContent='Analyze Prompt'; }
 }
 
 async function renderTrend(txs) {
@@ -143,6 +159,10 @@ $('reanalyze').addEventListener('click',()=>{ $('prompt').value=$('improved').va
 $('cancel').addEventListener('click',async()=>{ if(activeId){ await cancelTransaction(activeId); await pollActive(); }});
 $('clearLog').addEventListener('click',async()=>{ if(!activeId)return; const tx=await getTransaction(activeId); if(tx){ tx.events=[]; const { putTransaction }=await import('./idb.js'); await putTransaction(tx); await pollActive(); }});
 $('fetchServerLogs').addEventListener('click',async()=>{ if(!activeId)return alert('Select a transaction first.'); const token=window.prompt('Administrator API token for server logs. The token is used for this request only and is not stored by the app.'); if(!token)return; const b=$('fetchServerLogs'); b.disabled=true; b.textContent='Loading…'; try{ const res=await fetch(`/api/logs?request_id=${encodeURIComponent(activeId)}&limit=200`,{headers:{authorization:`Bearer ${token}`}}); const d=await res.json(); if(!res.ok) throw new Error(d.detail||d.error||`HTTP ${res.status}`); const lines=(d.logs||[]).map(e=>`${new Date(e.timestamp).toLocaleTimeString()} [SERVER:${e.stage||'event'}] ${e.message||''}`); const tx=await getTransaction(activeId); $('liveLog').textContent=[...(tx?.events||[]).map(e=>`${new Date(e.timestamp).toLocaleTimeString()} [BROWSER:${e.stage}] ${e.message}`),'',...lines].join('\n'); }catch(e){ alert(e.message); }finally{ b.disabled=false;b.textContent='Server Logs'; }});
+$('walletPeriod').addEventListener('change',renderWallet);
+$('walletReset').addEventListener('click',()=>{if(confirm('Reset the visible Efficiency Wallet? This does not change prior analysis history.')){resetWallet();renderWallet();}});
+$('walletMethod').addEventListener('click',()=>alert(`${MODEL_VERSION}\n\nEstimated tokens = prompt/output token model × expected retry reduction. Token count uses ~4 characters/token. Retry probability is modeled from PQA quality score and risk level. Dollar savings use the configured planning price profile and are not provider billing records.`));
+renderWallet();
 $('clearHistory').addEventListener('click',async()=>{ if(confirm('Clear browser transaction history?')){ await clearTransactions(); activeId=null; await refreshHistory(); $('liveLog').textContent='History cleared.'; }});
 $('copyJudge').addEventListener('click',async()=>{ try{ await navigator.clipboard.writeText($('judgeResponse').textContent); $('copyJudge').textContent='Copied'; setTimeout(()=>$('copyJudge').textContent='Copy JSON',1200);}catch{} });
 $('testJudge').addEventListener('click',async()=>{ const b=$('testJudge'); b.disabled=true; b.textContent='Testing…'; try { const res=await fetch('/api/test-judge',{method:'POST'}); const d=await res.json(); alert(d.ok?`Gemini connection OK • ${d.model} • ${fmtMs(d.duration_ms)}`:`Gemini unavailable • ${d.category || d.status}`); } catch(e){ alert(e.message); } finally{ b.disabled=false;b.textContent='Test Gemini'; }});

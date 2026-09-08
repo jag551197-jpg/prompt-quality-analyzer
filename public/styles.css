@@ -113,3 +113,6 @@ main{max-width:1640px;margin:auto;padding:22px 28px 44px}.release-strip{display:
 .pct-98{width:98%}
 .pct-99{width:99%}
 .pct-100{width:100%}
+
+.efficiency-wallet{margin:12px 0}.wallet-head,.wallet-actions{display:flex;justify-content:space-between;align-items:center;gap:8px}.wallet-grid{display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:8px;margin:12px 0}.wallet-grid>div{border:1px solid #e4e7ec;border-radius:10px;padding:12px;background:#fff}.wallet-grid span{display:block;font-size:9px;font-weight:750;letter-spacing:.06em;color:#667085}.wallet-grid b{display:block;font-size:24px;margin:4px 0;color:#101828}.wallet-grid small{color:#98a2b3;font-size:9px}.wallet-primary{background:linear-gradient(145deg,#fbfcff,#f7f9ff)!important}.wallet-primary b{font-size:30px;color:#2457e6}.wallet-actions{justify-content:flex-end;flex-wrap:wrap}.wallet-actions select{min-height:34px}
+@media(max-width:720px){.wallet-grid{grid-template-columns:1fr 1fr}.wallet-head{align-items:flex-start}.wallet-primary{grid-column:1/-1}.wallet-actions{justify-content:stretch}.wallet-actions>*{flex:1}}

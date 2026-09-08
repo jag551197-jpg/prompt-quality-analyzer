@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {estimateTextTokens,estimateSavings} from '../public/savings.js';
+test('token heuristic is deterministic',()=>{assert.equal(estimateTextTokens('12345678'),2)});
+test('better prompt model never reports negative savings',()=>{const x=estimateSavings({prompt:'Fix it.',improvedPrompt:'Inspect the failing API, cite evidence, preserve behavior, add tests, and report changed files.',score:35,risk:'high',intendedUse:'Coding / Software Development',reasonCodes:['A','B','C']});assert.ok(x.token_savings>=0);assert.ok(x.retry_savings>0);assert.equal(x.classification,'ESTIMATED');assert.equal(x.model_version,'PQA-SAVINGS-1.0')});
+test('estimate records pricing and assumptions',()=>{const x=estimateSavings({prompt:'Do it',improvedPrompt:'Do the bounded task',score:50,risk:'medium'});assert.ok(x.pricing);assert.equal(x.assumptions.chars_per_token,4)});

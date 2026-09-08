@@ -1,4 +1,4 @@
-# PQA Community v1.7.1 Validation
+# PQA Community v1.8.0 Validation
 
 Corrective release for the v1.7.0 multilingual/CSP regression.
 
