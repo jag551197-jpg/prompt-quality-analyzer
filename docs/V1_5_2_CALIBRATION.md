@@ -1,4 +1,4 @@
-# PQA v1.5.2 Calibration Design
+# PQA v1.6.1 Calibration Design
 
 This release targets the residual errors found in v1.5.1 + Benchmark v4.0.
 

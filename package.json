@@ -1,9 +1,9 @@
 {
-  "name": "prompt-quality-analyzer",
-  "version": "1.5.2",
+  "name": "pqa-community",
+  "version": "1.6.1",
   "private": false,
   "type": "module",
-  "description": "Open-source prompt quality analyzer using deterministic checks and Google Gemini as an LLM judge.",
+  "description": "Open-source prompt-only AI instruction reliability analyzer.",
   "license": "MIT",
   "engines": {
     "node": ">=20"

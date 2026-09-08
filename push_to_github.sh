@@ -2,7 +2,7 @@
 set -euo pipefail
 REPO="${PQA_GITHUB_REPO:-jag551197-jpg/prompt-quality-analyzer}"
 BRANCH="${PQA_GITHUB_BRANCH:-main}"
-VERSION="1.5.2"
+VERSION="1.6.1"
 BENCHMARK_VERSION="4.1"
 
 command -v git >/dev/null || { echo "git is required"; exit 1; }
@@ -19,14 +19,15 @@ git pull --ff-only origin "$BRANCH"
 git add -A
 git diff --cached --quiet && { echo "No changes staged."; exit 0; }
 
-git commit -m "release: PQA v${VERSION} evidence-aware calibration
+git commit -m "release: PQA v${VERSION} enterprise reliability portal
 
-- evidence-aware risk fusion
-- hard hallucination triggers
-- current-source mitigation
-- template-aware evaluation
-- score/risk confidence and reason codes
-- Benchmark v${BENCHMARK_VERSION} compatibility"
+- professional dark/white engineering surfaces
+- real reliability scorecards and local trends
+- severity indicators and reason codes
+- evidence and protective-control visibility
+- benchmark/version provenance and auditability
+- no scoring-engine behavior change
+- Benchmark v${BENCHMARK_VERSION} remains required"
 
 git tag -a "v${VERSION}" -m "PQA v${VERSION}"
 git push origin "$BRANCH"

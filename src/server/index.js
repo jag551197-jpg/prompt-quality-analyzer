@@ -9,29 +9,44 @@ import { submitGeminiJudge, getGeminiJudgeStatus, testGeminiConnection } from '.
 import { getLogs, logEvent } from './log-store.js';
 import { validateBenchmarkSuite, createBenchmarkRun, finalizeBenchmarkCase, summarizeBenchmark } from '../core/benchmark.js';
 import { requireBearer } from './auth.js';
+import { clientKey, rateLimit, dailyLimit, acquire, release, securityHeaders } from './security.js';
 
 try{const text=fs.readFileSync('.env','utf8');for(const line of text.split(/\r?\n/)){const m=line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);if(m&&process.env[m[1]]===undefined)process.env[m[1]]=m[2].replace(/^['"]|['"]$/g,'');}}catch{}
 const cfg=configFromEnv();
 const publicDir=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../../public');
 const mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.svg':'image/svg+xml'};
-function json(res,status,payload){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(payload));}
+function json(res,status,payload,extra={}){res.writeHead(status,securityHeaders({'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store',...extra}));res.end(JSON.stringify(payload));}
 async function readBody(req){let size=0,chunks=[];for await(const c of req){size+=c.length;if(size>524288)throw Object.assign(new Error('request too large'),{status:413});chunks.push(c);}try{return JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}catch{throw Object.assign(new Error('invalid JSON body'),{status:400});}}
 function validate(payload){const{prompt,context='',intendedUse='general',requiresCurrentFacts=false}=payload||{};if(typeof prompt!=='string'||!prompt.trim())throw Object.assign(new Error('prompt is required'),{status:400});if(prompt.length>cfg.maxPromptChars)throw Object.assign(new Error(`prompt exceeds ${cfg.maxPromptChars} characters`),{status:413});if(typeof context!=='string'||context.length>cfg.maxContextChars)throw Object.assign(new Error(`context exceeds ${cfg.maxContextChars} characters`),{status:413});return{prompt,context,intendedUse:String(intendedUse).slice(0,100),requiresCurrentFacts:Boolean(requiresCurrentFacts)};}
 function requestIdFor(req){const v=String(req.headers['x-pqa-transaction-id']||'');return /^[0-9a-f-]{36}$/i.test(v)?v:randomUUID();}
 
+function enforcePublic(req,res,kind){
+  const key=clientKey(req);
+  const perMin=kind==='gemini'?cfg.publicGeminiPerMinute:cfg.publicDeterministicPerMinute;
+  const minute=rateLimit(key,kind,perMin,60000);
+  if(!minute.ok){json(res,429,{error:'rate_limited',detail:'Too many requests.',retry_after_ms:minute.retry_after_ms});return null;}
+  if(kind==='gemini'){
+    const daily=dailyLimit(key,'gemini-daily',cfg.publicGeminiDailyLimit);
+    if(!daily.ok){json(res,429,{error:'free_quota_exceeded',detail:`Anonymous hosted AI limit reached (${cfg.publicGeminiDailyLimit}/day). Deterministic analysis remains available or self-host Community with your own Gemini key.`,retry_after_ms:daily.retry_after_ms});return null;}
+    if(!acquire(key,cfg.maxConcurrentGeminiPerIp)){json(res,429,{error:'concurrency_limited',detail:'An AI analysis is already running for this client.'});return null;}
+  }
+  return key;
+}
+
 const server=http.createServer(async(req,res)=>{try{
   const url=new URL(req.url,'http://localhost'); const requestId=requestIdFor(req);
-  if(req.method==='GET'&&url.pathname==='/api/health')return json(res,200,{ok:true,version:'1.5.2',architecture:'gemini-background-polling',judge_configured:Boolean(cfg.geminiApiKey),judge_model:cfg.geminiModel,api_token_configured:Boolean(cfg.pqaApiToken),analysis_protected:Boolean(cfg.protectAnalysis)});
+  if(req.method==='GET'&&url.pathname==='/api/health')return json(res,200,{ok:true,version:'1.6.1',architecture:'gemini-background-polling',judge_configured:Boolean(cfg.geminiApiKey),judge_model:cfg.geminiModel,api_token_configured:Boolean(cfg.pqaApiToken),analysis_protected:Boolean(cfg.protectAnalysis)});
   if(req.method==='GET'&&url.pathname==='/api/logs'){const auth=requireBearer(req.headers,cfg);if(!auth.ok)return json(res,auth.status,auth.body);return json(res,200,{logs:getLogs({limit:url.searchParams.get('limit'),requestId:url.searchParams.get('request_id')}),note:'In-process diagnostic log.'});}
   if(req.method==='POST'&&url.pathname==='/api/test-judge'){logEvent({level:'INFO',request_id:requestId,stage:'connection_test',message:'Testing Gemini background submit + polling'});const result=await testGeminiConnection({apiKey:cfg.geminiApiKey,model:cfg.geminiModel,timeoutMs:Math.min(cfg.timeoutMs||30000,12000)});return json(res,result.ok?200:503,{request_id:requestId,...result});}
-  if(req.method==='POST'&&url.pathname==='/api/deterministic'){if(cfg.protectAnalysis){const auth=requireBearer(req.headers,cfg);if(!auth.ok)return json(res,auth.status,auth.body);}const input=validate(await readBody(req));logEvent({level:'INFO',request_id:requestId,stage:'deterministic',message:'Running deterministic prompt checks'});const result=buildDeterministicResult(input);logEvent({level:'INFO',request_id:requestId,stage:'deterministic_complete',message:'Deterministic analysis complete',elapsed_ms:result.timing.total_ms});return json(res,200,{request_id:requestId,...result});}
+  if(req.method==='POST'&&url.pathname==='/api/deterministic'){const __k=cfg.protectAnalysis?'protected':enforcePublic(req,res,'deterministic');if(!__k)return;if(cfg.protectAnalysis){const auth=requireBearer(req.headers,cfg);if(!auth.ok)return json(res,auth.status,auth.body);}const input=validate(await readBody(req));logEvent({level:'INFO',request_id:requestId,stage:'deterministic',message:'Running deterministic prompt checks'});const result=buildDeterministicResult(input);logEvent({level:'INFO',request_id:requestId,stage:'deterministic_complete',message:'Deterministic analysis complete',elapsed_ms:result.timing.total_ms});return json(res,200,{request_id:requestId,...result});}
   if(req.method==='POST'&&url.pathname==='/api/judge-submit'){
+    const __publicKey=cfg.protectAnalysis?'protected':enforcePublic(req,res,'gemini');if(!__publicKey)return;
     if(cfg.protectAnalysis){const auth=requireBearer(req.headers,cfg);if(!auth.ok)return json(res,auth.status,auth.body);}
     const input=validate(await readBody(req)); const deterministic=buildDeterministicResult(input);
     logEvent({level:'INFO',request_id:requestId,stage:'judge_submit',message:`Submitting Gemini background interaction (${cfg.geminiModel})`});
     const sub=await submitGeminiJudge({...input,staticAnalysis:deterministic.deterministic},{apiKey:cfg.geminiApiKey,model:cfg.geminiModel,rubricVersion:deterministic.rubric_version,timeoutMs:Math.min(cfg.timeoutMs||30000,10000)});
     logEvent({level:'INFO',request_id:requestId,stage:'judge_submitted',message:`Gemini interaction ${sub.interaction_id} accepted with status ${sub.status}`,elapsed_ms:sub.duration_ms});
-    return json(res,202,{request_id:requestId,...sub});
+    if(__publicKey!=='protected')release(__publicKey);return json(res,202,{request_id:requestId,...sub});
   }
   if(req.method==='GET'&&url.pathname==='/api/judge-status'){
     if(cfg.protectAnalysis){const auth=requireBearer(req.headers,cfg);if(!auth.ok)return json(res,auth.status,auth.body);}
@@ -84,4 +99,4 @@ const server=http.createServer(async(req,res)=>{try{
   if(url.pathname.startsWith('/api/'))return json(res,404,{error:'not_found'});
   let rel=url.pathname==='/'?'index.html':url.pathname.slice(1);let target=path.resolve(publicDir,rel);if(!target.startsWith(publicDir))return json(res,403,{error:'forbidden'});if(!fs.existsSync(target)||fs.statSync(target).isDirectory())target=path.join(publicDir,'index.html');res.writeHead(200,{'Content-Type':mime[path.extname(target)]||'application/octet-stream','X-Content-Type-Options':'nosniff'});fs.createReadStream(target).pipe(res);
 }catch(e){json(res,e.status||500,{error:e.status?'bad_request':'analysis_failed',category:e.category||null,detail:e.message});}});
-server.listen(cfg.port,'0.0.0.0',()=>console.log(`Prompt Quality Analyzer v1.5.2 listening on http://0.0.0.0:${cfg.port} (${cfg.geminiApiKey?'Gemini background judge enabled':'deterministic-only'})`));
+server.listen(cfg.port,'0.0.0.0',()=>console.log(`Prompt Quality Analyzer v1.6.1 listening on http://0.0.0.0:${cfg.port} (${cfg.geminiApiKey?'Gemini background judge enabled':'deterministic-only'})`));

@@ -1,12 +1,159 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Prompt Quality Analyzer</title><meta name="description" content="Open-source prompt quality analyzer powered by deterministic checks and Google Gemini as an LLM judge."><link rel="stylesheet" href="/styles.css?v=1.5.2"></head><body>
-<header><div><h1>Prompt Quality Analyzer <small>v1.5.2</small></h1><p>Analyze. Understand. Improve. <span>Powered by Gemini</span></p></div><div class="header-actions"><button id="testJudge" class="compact secondary">Test Gemini</button><a href="https://github.com/" target="_blank" rel="noreferrer">Open Source</a></div></header>
-<main>
-<section class="statusbar panel"><div><span class="eyebrow">Execution</span><strong id="stage">Ready</strong></div><div class="progresswrap"><div class="progress"><i id="progressBar"></i></div><small id="progressText">0%</small></div><div class="timing"><span>Elapsed <b id="elapsed">0.0s</b></span><span>ETA <b id="eta">—</b></span><span>Request <b id="requestId">—</b></span><span>State <b id="dbState">Ready</b></span><span>Attempts <b id="attempts">0/3</b></span></div></section>
-<section class="workspace"><div class="input panel"><h2>1. Your Prompt</h2><label>Use case<select id="useCase"><option>General</option><option>RAG / Document Q&A</option><option>Customer Support</option><option>Coding</option><option>Research</option><option>Data Analysis</option><option>Agent / Tool Use</option></select></label><label>Prompt<textarea id="prompt" maxlength="30000" placeholder="Paste the prompt you want to evaluate..."></textarea></label><label>Context <small>(optional)</small><textarea id="context" class="small" maxlength="60000" placeholder="Paste relevant context or evidence..."></textarea></label><label class="check"><input id="current" type="checkbox"> Requires current / time-sensitive facts</label><div class="actionrow"><button id="analyze">Analyze Prompt</button><button id="cancel" class="secondary" disabled>Cancel</button></div><p class="privacy">Analysis transactions, including the prompt/context needed for refresh recovery, are stored locally in this browser using IndexedDB until you clear history. They are not persisted by this application on the server. If Gemini is configured, the prompt is sent to Google's Gemini API for evaluation.</p></div>
-<div class="results panel"><div class="top"><div><h2>Overall Prompt Quality</h2><div class="score" id="score">—</div><div id="quality">Ready</div></div><div class="risk"><span>Hallucination Risk</span><b id="risk">—</b><span>Mode</span><b id="mode">—</b><span>Judge</span><b id="judge">—</b><span>Judge latency</span><b id="judgeLatency">—</b></div></div><div id="dimensions" class="dimensions"></div><div class="tabs"><div><h3>Issues</h3><ul id="issues"><li>Analyze a prompt to see findings.</li></ul></div><div><h3>Recommendations</h3><ul id="recs"><li>Recommendations will appear here.</li></ul></div></div></div>
-<div class="improved panel"><h2>Recommended Prompt</h2><textarea id="improved" readonly placeholder="Gemini-generated recommended prompt will appear here when the judge is configured."></textarea><button id="reanalyze" class="secondary" disabled>Re-analyze Recommended Prompt</button><p id="disclaimer"></p></div></section>
-<section class="diagnostics"><div class="panel"><div class="sectionhead"><div><h2>Live Execution Log</h2><p>Sanitized stage-by-stage activity from this request.</p></div><div class="inline-actions"><button id="fetchServerLogs" class="compact secondary">Server Logs</button><button id="clearLog" class="compact secondary">Clear</button></div></div><pre id="liveLog" class="logbox">Ready.</pre><p class="loghint">Linux: server logs are written to stdout. Netlify: open <b>Logs & Metrics → Functions</b>, or run <code>netlify logs --follow</code>.</p></div>
-<div class="panel"><div class="sectionhead"><div><h2>Gemini Judge Response</h2><p>Validated structured response returned by the judge.</p></div><button id="copyJudge" class="compact secondary" disabled>Copy JSON</button></div><pre id="judgeResponse" class="logbox jsonbox">No Gemini response yet.</pre></div></section>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PQA Community — AI Instruction Reliability</title>
+  <meta name="description" content="PQA evaluates AI instructions for quality, ambiguity, unsupported assumptions and hallucination risk before execution.">
+  <link rel="stylesheet" href="/styles.css?v=1.6.1">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="#" aria-label="PQA home">
+      <span class="brand-mark">P</span>
+      <span><b>PQA</b><small>AI Instruction Reliability</small></span>
+    </a>
+    <nav class="nav">
+      <a class="active" href="#analyzer"><span>◫</span>Analyze</a>
+      <a href="#historySection"><span>↺</span>History</a>
+      <a href="#benchmark"><span>◇</span>Benchmark</a>
+      <a href="#diagnostics"><span>⌁</span>Diagnostics</a>
+    </nav>
+    <div class="sidebar-meta">
+      <span class="status-dot"></span><span>Engine ready</span>
+      <small>PQA v1.6.1</small>
+      <small>Benchmark v4.1</small>
+    </div>
+  </aside>
 
-<section class="transactions panel"><div class="sectionhead"><div><h2>Browser Transaction Ledger</h2><p>IndexedDB keeps analysis jobs durable across refreshes. The UI polls this ledger every 500ms.</p></div><button id="clearHistory" class="compact secondary">Clear History</button></div><div id="history" class="history"></div></section>
-<section class="about"><h2>What it evaluates</h2><div class="cards"><article><b>Clarity</b><span>Is the task explicit?</span></article><article><b>Context</b><span>Is enough evidence supplied?</span></article><article><b>Grounding</b><span>Are factual claims constrained?</span></article><article><b>Uncertainty</b><span>Can the model abstain safely?</span></article><article><b>Output Contract</b><span>Is the response shape defined?</span></article><article><b>Tools</b><span>Is retrieval/tool use guided?</span></article><article><b>Conflict Handling</b><span>Are ambiguities controlled?</span></article><article><b>Efficiency</b><span>Is context concise and relevant?</span></article></div></section></main><footer>Prompt Quality Analyzer v1.5.2 • Open-source developer tool • Prompt-level risk indicators are not a guarantee of model behavior.</footer><script type="module" src="/app.js?v=1.5.2"></script></body></html>
+  <div class="main-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">DEVELOPER RELIABILITY CONTROL</p>
+        <h1>Analyze before AI executes.</h1>
+      </div>
+      <div class="header-actions">
+        <button id="testJudge" class="button ghost compact">Test Gemini</button>
+        <a class="button ghost compact" href="https://github.com/" target="_blank" rel="noreferrer">GitHub</a>
+      </div>
+    </header>
+
+    <main>
+      <section id="benchmark" class="release-strip">
+        <div><span>ENGINE</span><b>v1.6.1</b></div>
+        <div><span>BENCHMARK</span><b>v4.1 · 300 cases</b></div>
+        <div><span>RISK MODEL</span><b>Evidence-tiered v3</b></div>
+        <div><span>MODE</span><b>Prompt-first · repo optional</b></div>
+      </section>
+
+      <section class="metric-grid" aria-label="Reliability overview">
+        <article class="metric-card"><div><span>QUALITY SCORE</span><b id="scoreCard">—</b></div><small id="scoreCardSub">No analysis yet</small></article>
+        <article class="metric-card"><div><span>HALLUCINATION RISK</span><b id="riskCard">—</b></div><small id="riskCardSub">Awaiting evaluation</small></article>
+        <article class="metric-card"><div><span>CONFIDENCE</span><b id="confidenceCard">—</b></div><small id="confidenceCardSub">Score confidence</small></article>
+        <article class="metric-card"><div><span>LOCAL TREND</span><b id="trendValue">—</b></div><small id="trendSub">Recent browser analyses</small></article>
+      </section>
+
+      <section class="trend-panel surface">
+        <div class="section-title"><div><p class="eyebrow">RELIABILITY TREND</p><h2>Recent prompt quality</h2></div><span id="trendCount" class="mono muted">0 analyses</span></div>
+        <div class="trend-chart-wrap">
+          <svg id="trendChart" class="trend-chart" viewBox="0 0 800 150" preserveAspectRatio="none" role="img" aria-label="Recent prompt quality trend">
+            <line x1="0" y1="30" x2="800" y2="30" class="gridline"/><line x1="0" y1="75" x2="800" y2="75" class="gridline"/><line x1="0" y1="120" x2="800" y2="120" class="gridline"/>
+            <polyline id="trendLine" points="" class="trend-line"/>
+            <g id="trendDots"></g>
+          </svg>
+          <div id="trendEmpty" class="trend-empty">Run analyses to build a local reliability trend. No synthetic data is shown.</div>
+        </div>
+      </section>
+
+      <section id="analyzer" class="analysis-layout">
+        <div class="surface input-panel">
+          <div class="section-title"><div><p class="eyebrow">INPUT</p><h2>Developer instruction</h2></div><span class="badge neutral">Prompt-only by default</span></div>
+          <label>Use case<select id="useCase"><option>General</option><option>RAG / Document Q&A</option><option>Customer Support</option><option>Coding / Software Development</option><option>Research</option><option>Data Analysis</option><option>Agent / Tool Use</option><option>Structured Extraction</option></select></label>
+          <label>Prompt<textarea id="prompt" maxlength="30000" placeholder="Example: Look at this API and fix why it is slow. Don't break anything. Give me the files I need to change."></textarea></label>
+          <label>Optional evidence / context<textarea id="context" class="small" maxlength="60000" placeholder="Selected logs, requirements, code excerpt, document text, acceptance criteria..."></textarea></label>
+          <label class="check"><input id="current" type="checkbox"> Requires current / time-sensitive facts</label>
+          <div class="actionrow"><button id="analyze" class="button primary">Analyze instruction</button><button id="cancel" class="button ghost" disabled>Cancel</button></div>
+          <p class="privacy">Prompt/context required for refresh recovery is stored locally in this browser. The application does not persist it on the server. If Gemini is enabled, evaluation content is sent to the configured Gemini endpoint.</p>
+        </div>
+
+        <div class="surface result-panel">
+          <div class="result-header">
+            <div><p class="eyebrow">RELIABILITY ASSESSMENT</p><h2>Instruction quality</h2></div>
+            <span id="severityBadge" class="severity unknown">NOT EVALUATED</span>
+          </div>
+          <div class="hero-score-row">
+            <div class="hero-score"><b id="score">—</b><span>/100</span><small id="quality">READY</small></div>
+            <div class="risk-stack">
+              <span>Hallucination risk <b id="risk">—</b></span>
+              <span>Score range <b id="scoreRange">—</b></span>
+              <span>Confidence <b id="scoreConfidence">—</b></span>
+              <span>Evaluation mode <b id="evaluationMode">—</b></span>
+            </div>
+          </div>
+
+          <div id="dimensions" class="dimensions"></div>
+
+          <div class="two-col-blocks">
+            <div class="subsurface"><div class="subhead"><h3>Reason codes</h3><span>machine-readable</span></div><div id="reasonCodes" class="chips"><span class="chip muted-chip">No reason codes</span></div></div>
+            <div class="subsurface"><div class="subhead"><h3>Evidence & controls</h3><span>positive safeguards</span></div><ul id="strengths" class="dense-list"><li>No evidence controls detected yet.</li></ul></div>
+          </div>
+
+          <div class="two-col-blocks">
+            <div class="subsurface"><div class="subhead"><h3>Findings</h3><span>reliability gaps</span></div><ul id="issues" class="dense-list"><li>Analyze an instruction to see findings.</li></ul></div>
+            <div class="subsurface"><div class="subhead"><h3>Recommendations</h3><span>next actions</span></div><ul id="recs" class="dense-list"><li>Recommendations will appear here.</li></ul></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="surface improved-panel">
+        <div class="section-title"><div><p class="eyebrow">REMEDIATION</p><h2>Recommended instruction</h2></div><button id="reanalyze" class="button ghost compact" disabled>Re-analyze</button></div>
+        <textarea id="improved" readonly placeholder="The recommended prompt will appear here when Gemini is configured."></textarea>
+        <p id="disclaimer" class="muted"></p>
+      </section>
+
+      <section class="surface execution-panel">
+        <div class="section-title"><div><p class="eyebrow">EXECUTION</p><h2>Analysis lifecycle</h2></div><strong id="stage">Ready</strong></div>
+        <div class="progresswrap"><div class="progress"><i id="progressBar"></i></div><small id="progressText">0%</small></div>
+        <div class="execution-metrics">
+          <span>Elapsed <b id="elapsed">0.0s</b></span><span>ETA <b id="eta">—</b></span><span>Request <b id="requestId">—</b></span><span>State <b id="dbState">Ready</b></span><span>Attempts <b id="attempts">0/3</b></span>
+        </div>
+      </section>
+
+      <section class="audit-grid">
+        <div class="surface">
+          <div class="section-title"><div><p class="eyebrow">AUDITABILITY</p><h2>Evaluation provenance</h2></div><span class="badge success">TRACEABLE</span></div>
+          <dl class="audit-list">
+            <div><dt>PQA engine</dt><dd id="auditEngine">v1.6.1</dd></div>
+            <div><dt>Rubric</dt><dd id="auditRubric">—</dd></div>
+            <div><dt>Risk model</dt><dd id="auditRiskModel">evidence-tiered-v3</dd></div>
+            <div><dt>Scoring profile</dt><dd id="auditProfile">—</dd></div>
+            <div><dt>Judge</dt><dd id="judge">—</dd></div>
+            <div><dt>Judge latency</dt><dd id="judgeLatency">—</dd></div>
+            <div><dt>Request ID</dt><dd id="auditRequest">—</dd></div>
+            <div><dt>Updated</dt><dd id="auditUpdated">—</dd></div>
+          </dl>
+        </div>
+        <div class="surface">
+          <div class="section-title"><div><p class="eyebrow">RISK EVIDENCE</p><h2>Detected indicators</h2></div></div>
+          <ul id="riskIndicators" class="evidence-list"><li>No risk evidence available yet.</li></ul>
+        </div>
+      </section>
+
+      <section id="diagnostics" class="diagnostics">
+        <div class="surface"><div class="section-title"><div><p class="eyebrow">DIAGNOSTICS</p><h2>Live execution log</h2></div><div class="inline-actions"><button id="fetchServerLogs" class="button ghost compact">Server logs</button><button id="clearLog" class="button ghost compact">Clear</button></div></div><pre id="liveLog" class="logbox">Ready.</pre></div>
+        <div class="surface"><div class="section-title"><div><p class="eyebrow">JUDGE EVIDENCE</p><h2>Gemini structured response</h2></div><button id="copyJudge" class="button ghost compact" disabled>Copy JSON</button></div><pre id="judgeResponse" class="logbox jsonbox">No Gemini response yet.</pre></div>
+      </section>
+
+      <section id="historySection" class="surface transactions">
+        <div class="section-title"><div><p class="eyebrow">LOCAL AUDIT LEDGER</p><h2>Browser transaction history</h2></div><button id="clearHistory" class="button ghost compact">Clear history</button></div>
+        <div id="history" class="history"></div>
+      </section>
+    </main>
+
+    <footer>PQA v1.6.1 · Benchmark v4.1 · Prompt-level risk indicators are engineering signals, not guarantees of model behavior.</footer>
+  </div>
+</div>
+<script type="module" src="/app.js?v=1.6.1"></script>
+</body>
+</html>

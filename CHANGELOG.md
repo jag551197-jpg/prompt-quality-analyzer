@@ -1,52 +1,67 @@
 # Changelog
 
+## 1.6.1 — Community security hardening
+- Added evaluator-manipulation, system-prompt extraction, and instruction-hierarchy detection.
+- Explicitly isolates analyzed prompt/context as untrusted data in the Gemini judge.
+- Added anonymous hosted Gemini daily/rate/concurrency limits.
+- Added deterministic endpoint burst limits.
+- Added CSP, HSTS, anti-framing, referrer and permissions headers.
+- Added supply-chain provenance and threat-model documentation.
+- Added security regression tests.
+- Community remains prompt-only; commercial context features are absent.
+
+## 1.6.1 — Enterprise reliability portal UX
+
+### Added
+- Dark engineering navigation shell with white professional analysis surfaces.
+- Reliability scorecards for quality, hallucination risk, confidence, and local trend.
+- Real local trend visualization sourced only from the browser transaction ledger; no synthetic enterprise metrics.
+- Severity badges tied to the current hallucination-risk result.
+- Machine-readable reason-code display.
+- Evidence/protective-control panel and detected risk-evidence panel.
+- Visible benchmark, engine, rubric, scoring-profile, risk-model, judge, request ID, and timestamp provenance.
+- Audit-oriented transaction history showing score and risk for each local analysis.
+- Explicit product positioning as **PQA — AI Instruction Reliability**.
+
+### Changed
+- Reorganized the analyzer around developer reliability rather than a demo-style three-column layout.
+- Moved execution telemetry into a dedicated lifecycle panel.
+- Made diagnostic logs and structured Gemini output secondary engineering evidence rather than primary UI.
+- Updated all visible/runtime package version references to 1.6.1.
+
+### Evaluation behavior
+- No scoring, deterministic-rule, Gemini-judge, benchmark-contract, or risk-fusion behavior changed from 1.5.2.
+- Benchmark Suite v4.1 remains the required validation corpus.
+- Per release policy, L0–L6 must still be rerun against the deployed 1.6.1 build before new performance claims are published.
+
 ## 1.5.2 — Evidence-aware calibration
 
 ### Added
 - Evidence-aware hallucination risk fusion (`evidence-tiered-v3`).
 - Hard HIGH-risk triggers for uncertainty suppression, fabricated citations, and silent conflict guessing.
 - Explicit mitigation for current/latest requests that require authoritative retrieval and citations.
-- Template-vs-instantiated prompt detection for `{{...}}`, `${...}`, `[PLACEHOLDER]`, and `<placeholder>` patterns.
+- Template-vs-instantiated prompt detection for common placeholder forms.
 - Score confidence, risk confidence, score range, evaluation mode, and machine-readable reason codes.
 - Regression tests for current research, diagnostic/root-cause reasoning, templates, and hard hallucination triggers.
 
 ### Changed
 - Current-information risk no longer treats explicit retrieval/grounding as equivalent to ungrounded current facts.
-- Risk fusion now distinguishes active dangerous instructions from missing optional safeguards.
-- Runtime/result version updated consistently to 1.5.2.
+- Risk fusion distinguishes active dangerous instructions from missing optional safeguards.
 
 ### Benchmark compatibility
 - Designed for PQA Complete Validation Suite v4.1.
-- v4.1 preserves the v4.0 200-case regression corpus and adds focused boundary cases.
-- Historical v4.0 results remain immutable.
+- v4.1 preserves the v4.0 200-case regression corpus and adds 100 focused boundary cases.
 
-## 1.5.2 — UI version consistency hotfix
+## 1.5.1 — UI version consistency hotfix
+- Corrected stale visible UI version labels.
+- Synchronized UI, API health, startup, package metadata, and cache-busting version identifiers.
 
-- Fixed stale header version label so UI and runtime/API versions remain synchronized.
-- Synchronized UI header, footer, cache-busting asset versions, API health, server startup, package metadata, and analysis result version.
-
-# Changelog
-
-## 1.5.0
-
-Benchmark result-lifecycle repair.
-
-- Preserves case metadata (`id`, `case_id`, `category`, tags, pair metadata).
-- Adds explicit per-case lifecycle `status`.
-- Emits canonical `final_result` plus runner-compatible `result` and `analysis` aliases.
-- Emits canonical `expectations` plus compatible `expectation.pass` / `expectation.passed`.
-- Adds a final-result integrity validator; `completed` now requires a numeric score, valid risk, recommendations array, and dimensions.
-- Adds `result_integrity_rate`, `analytically_complete_cases`, and `invalid_result_cases` to benchmark summaries.
-- Updates resilient Python runner to consume `final_result` / `expectations` and fail hard on terminal cases with missing analytic results.
-- Preserves deterministic-only fallback as a valid finalized benchmark result.
-- Adds API/runner contract regression tests.
-
-## 1.5.0 — Calibration release
+## 1.5.0 — Task-aware calibration
 - Added task-aware scoring profiles for coding, RAG, research, agent/tool use, extraction, customer support, data analysis, and general prompts.
-- Replaced worst-of risk fusion with tiered evidence-aware risk fusion.
-- Added explicit-danger detection for forced certainty, guessing/inference, unbounded tools, causal overclaims, conflicting constraints, destructive actions, and unsupported conflict resolution.
-- Added positive-control recognition for grounding, abstention, citations, output contracts, bounded tools, null-on-missing, conflict reporting, destructive confirmation, and causal discipline.
-- Reworked Gemini judge instructions to score task-relevant quality and distinguish missing best practices from active hallucination risk.
-- Added deterministic/Gemini score calibration and task-relevant floors for non-applicable dimensions.
-- Added canonical pairwise metrics to benchmark summaries.
-- Added calibration regression tests. L1 deterministic validation suite passes 30/30 locally.
+- Added tiered risk concepts and positive-control recognition.
+- Added deterministic/Gemini score calibration and true pairwise benchmark metrics.
+
+## 1.4.2 — Benchmark result-contract repair
+- Preserved case metadata and canonical final-result lifecycle.
+- Added result integrity validation and runner-compatible aliases.
+- Fixed the mismatch that allowed completed batches to yield unusable case-level reports.
