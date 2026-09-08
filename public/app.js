@@ -1,3 +1,4 @@
+import {getLanguage,getLocale,languageInstruction} from './i18n.js';
 import { clearTransactions, getTransaction, listTransactions } from './idb.js';
 import { cancelTransaction, createAnalysisTransaction, executeTransaction, getEstimatedProgress, resumePendingTransactions, subscribeTransactionUpdates, TERMINAL_STATES } from './job-manager.js';
 
@@ -49,7 +50,7 @@ function renderResult(r) {
   $('improved').value=r.improved_prompt || '';
   $('reanalyze').disabled=!r.improved_prompt;
   $('disclaimer').textContent=(r.disclaimer || '') + (r.judge?.error ? ` Judge fallback: ${r.judge.error}` : '');
-  $('auditEngine').textContent=`v${r.version||'1.6.1'}`;
+  $('auditEngine').textContent=`v${r.version||'1.7.0'}`;
   $('auditRubric').textContent=r.rubric_version || '—';
   $('auditRiskModel').textContent=r.calibration?.risk_model || 'evidence-tiered-v3';
   $('auditProfile').textContent=r.scoring_profile || r.calibration?.profile || '—';

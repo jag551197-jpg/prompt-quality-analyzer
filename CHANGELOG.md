@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.6.1 — Community security hardening
+## 1.7.0 — Community security hardening
 - Added evaluator-manipulation, system-prompt extraction, and instruction-hierarchy detection.
 - Explicitly isolates analyzed prompt/context as untrusted data in the Gemini judge.
 - Added anonymous hosted Gemini daily/rate/concurrency limits.
@@ -10,7 +10,7 @@
 - Added security regression tests.
 - Community remains prompt-only; commercial context features are absent.
 
-## 1.6.1 — Enterprise reliability portal UX
+## 1.7.0 — Enterprise reliability portal UX
 
 ### Added
 - Dark engineering navigation shell with white professional analysis surfaces.
@@ -27,12 +27,12 @@
 - Reorganized the analyzer around developer reliability rather than a demo-style three-column layout.
 - Moved execution telemetry into a dedicated lifecycle panel.
 - Made diagnostic logs and structured Gemini output secondary engineering evidence rather than primary UI.
-- Updated all visible/runtime package version references to 1.6.1.
+- Updated all visible/runtime package version references to 1.7.0.
 
 ### Evaluation behavior
 - No scoring, deterministic-rule, Gemini-judge, benchmark-contract, or risk-fusion behavior changed from 1.5.2.
 - Benchmark Suite v4.1 remains the required validation corpus.
-- Per release policy, L0–L6 must still be rerun against the deployed 1.6.1 build before new performance claims are published.
+- Per release policy, L0–L6 must still be rerun against the deployed 1.7.0 build before new performance claims are published.
 
 ## 1.5.2 — Evidence-aware calibration
 

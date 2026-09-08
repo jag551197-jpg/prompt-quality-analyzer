@@ -1,12 +1,12 @@
 import { performance } from 'node:perf_hooks';
 import { validateJudgeResult, judgeJsonSchema } from '../core/schema.js';
 
-// v1.6.1 calibration: template-aware, evidence-aware current facts and diagnostics; hard danger for fabrication/uncertainty suppression.
+// v1.7.0 calibration: template-aware, evidence-aware current facts and diagnostics; hard danger for fabrication/uncertainty suppression.
 const BASE='https://generativelanguage.googleapis.com/v1beta/interactions';
 
-export function buildJudgeInput({ prompt, context, intendedUse, requiresCurrentFacts, staticAnalysis, rubricVersion }) {
+export function buildJudgeInput({ prompt, context, intendedUse, requiresCurrentFacts, staticAnalysis, rubricVersion, response_language_instruction='' }) {
   const profile = staticAnalysis?.profile || 'general';
-  return `You are a rigorous prompt-quality evaluator for software developers.
+  return `${response_language_instruction ? `OUTPUT LANGUAGE REQUIREMENT:\n${response_language_instruction}\n\n` : ''}You are a rigorous prompt-quality evaluator for software developers.
 
 Evaluate the PROMPT itself, not whether you personally can answer it. Scores are 0-100 where 100 is excellent. Apply the rubric in a TASK-AWARE way: do not penalize a prompt for omitting controls that are irrelevant to its intended use. For example, coding or creative prompts do not inherently require web retrieval or citations; RAG/research/current-fact prompts do require stronger grounding. Structured extraction strongly values explicit schemas and missing-value handling. Agent prompts strongly value bounded tool use and safe failure behavior.
 

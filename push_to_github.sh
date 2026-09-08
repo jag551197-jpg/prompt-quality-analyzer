@@ -2,7 +2,7 @@
 set -euo pipefail
 REPO="${PQA_GITHUB_REPO:-jag551197-jpg/prompt-quality-analyzer}"
 BRANCH="${PQA_GITHUB_BRANCH:-main}"
-VERSION="1.6.1"
+VERSION="1.7.0"
 BENCHMARK_VERSION="4.1"
 
 command -v git >/dev/null || { echo "git is required"; exit 1; }
