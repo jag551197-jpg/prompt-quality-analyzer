@@ -67,7 +67,7 @@ function renderResult(r) {
   $('improved').value=r.improved_prompt || '';
   $('reanalyze').disabled=!r.improved_prompt;
   $('disclaimer').textContent=(r.disclaimer || '') + (r.judge?.error ? ` Judge fallback: ${r.judge.error}` : '');
-  $('auditEngine').textContent=`v${r.version||'1.8.0'}`;
+  $('auditEngine').textContent=`v${r.version||'1.8.1'}`;
   $('auditRubric').textContent=r.rubric_version || '—';
   $('auditRiskModel').textContent=r.calibration?.risk_model || 'evidence-tiered-v3';
   $('auditProfile').textContent=r.scoring_profile || r.calibration?.profile || '—';
