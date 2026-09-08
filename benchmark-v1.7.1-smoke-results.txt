@@ -1,0 +1,27 @@
+Benchmark 0dc8c1f8-5a76-4039-8a73-59fdbddf4e0f submitted: 3 cases
+{
+  "total_cases": 3,
+  "terminal_cases": 3,
+  "completed_cases": 3,
+  "analytically_complete_cases": 3,
+  "invalid_result_cases": 0,
+  "pending_cases": 0,
+  "expectation_cases": 3,
+  "expectation_passes": 3,
+  "expectation_failures": 0,
+  "expectation_pass_rate": 100,
+  "average_overall_score": 78.33,
+  "result_integrity_rate": 100,
+  "pairwise": {
+    "total_pairs": 0,
+    "passes": 0,
+    "failures": 0,
+    "accuracy": null,
+    "average_score_delta": null,
+    "details": []
+  },
+  "status": "completed"
+}
+forced-certainty-current-facts: 38 | high | PASS
+strong-code-review: 97 | low | PASS
+strong-grounded-rag: 100 | low | PASS

@@ -1,8 +1,9 @@
-import {getLanguage,getLocale,languageInstruction} from './i18n.js';
+import {getLanguage,getLocale,languageInstruction,installLanguageUI} from './i18n.js';
 import { clearTransactions, getTransaction, listTransactions } from './idb.js';
 import { cancelTransaction, createAnalysisTransaction, executeTransaction, getEstimatedProgress, resumePendingTransactions, subscribeTransactionUpdates, TERMINAL_STATES } from './job-manager.js';
 
 const $ = id => document.getElementById(id);
+installLanguageUI();
 const btn = $('analyze');
 let activeId = null;
 let pollTimer = null;
@@ -41,7 +42,7 @@ function renderResult(r) {
   const sev=$('severityBadge'); sev.className=`severity ${riskClass(r.hallucination_risk)}`; sev.textContent=severityLabel(r.hallucination_risk);
   $('judge').textContent=r.judge?.model || 'Not configured';
   $('judgeLatency').textContent=fmtMs(r.judge?.duration_ms);
-  $('dimensions').innerHTML=Object.values(r.dimensions || {}).map(d=>`<div class="dim"><div class="dimline"><span>${esc(d.label)}</span><b>${d.score}</b></div><div class="bar"><i style="width:${Math.max(0,Math.min(100,d.score))}%"></i></div></div>`).join('');
+  $('dimensions').innerHTML=Object.values(r.dimensions || {}).map(d=>`<div class="dim"><div class="dimline"><span>${esc(d.label)}</span><b>${d.score}</b></div><div class="bar"><i class="pct-${Math.round(Math.max(0,Math.min(100,d.score)))}"></i></div></div>`).join('');
   list($('issues'),r.weaknesses,'No major reliability gaps identified.');
   list($('recs'),r.recommendations,'No recommendations.');
   list($('strengths'),r.strengths,'No explicit protective controls detected.');
@@ -50,7 +51,7 @@ function renderResult(r) {
   $('improved').value=r.improved_prompt || '';
   $('reanalyze').disabled=!r.improved_prompt;
   $('disclaimer').textContent=(r.disclaimer || '') + (r.judge?.error ? ` Judge fallback: ${r.judge.error}` : '');
-  $('auditEngine').textContent=`v${r.version||'1.7.0'}`;
+  $('auditEngine').textContent=`v${r.version||'1.7.1'}`;
   $('auditRubric').textContent=r.rubric_version || '—';
   $('auditRiskModel').textContent=r.calibration?.risk_model || 'evidence-tiered-v3';
   $('auditProfile').textContent=r.scoring_profile || r.calibration?.profile || '—';
@@ -71,7 +72,7 @@ async function renderTransaction(tx) {
   $('auditRequest').textContent=tx.id;
   $('auditUpdated').textContent=new Date(tx.updated_at || tx.created_at || Date.now()).toLocaleString();
   $('stage').textContent=stateLabel(tx.stage || tx.state);
-  $('progressBar').style.width=`${p.progress}%`;
+  $('progressBar').className=`pct-${Math.round(Math.max(0,Math.min(100,p.progress)))}`;
   $('progressText').textContent=`${p.progress}%`;
   $('eta').textContent=['judge_submitting','judge_polling'].includes(tx.state) ? fmtMs(p.eta_ms) : tx.state==='retry_wait' ? `retry ${fmtMs(p.eta_ms)}` : TERMINAL_STATES.has(tx.state) ? '—' : fmtMs(p.eta_ms);
   $('attempts').textContent=`${tx.attempts || 0}/3`;
@@ -85,7 +86,7 @@ async function renderTransaction(tx) {
 async function renderTrend(txs) {
   const scored=txs.filter(t=>Number.isFinite(Number((t.final_result||t.deterministic_result)?.overall_score))).slice().reverse();
   $('trendCount').textContent=`${scored.length} ${scored.length===1?'analysis':'analyses'}`;
-  $('trendEmpty').style.display=scored.length?'none':'grid';
+  $('trendEmpty').classList.toggle('is-hidden',Boolean(scored.length));
   if(!scored.length){$('trendLine').setAttribute('points','');$('trendDots').innerHTML='';$('trendValue').textContent='—';$('trendSub').textContent='Recent browser analyses';return;}
   const vals=scored.map(t=>Number((t.final_result||t.deterministic_result).overall_score));
   const w=800,h=150,pad=12;
@@ -128,7 +129,7 @@ async function startAnalysis(promptOverride) {
   const prompt=promptOverride ?? $('prompt').value;
   if (!prompt.trim()) return alert('Paste a prompt first.');
   btn.disabled=true; btn.textContent='Queued…';
-  const payload={ prompt, context:$('context').value, intendedUse:$('useCase').value, requiresCurrentFacts:$('current').checked };
+  const payload={ prompt, context:$('context').value, intendedUse:$('useCase').value, requiresCurrentFacts:$('current').checked, ui_language:getLanguage(), ui_locale:getLocale(), response_language_instruction:languageInstruction() };
   const tx=await createAnalysisTransaction(payload);
   activeId=tx.id;
   await renderTransaction(tx); await refreshHistory();
