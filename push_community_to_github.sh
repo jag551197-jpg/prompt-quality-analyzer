@@ -2,7 +2,7 @@
 set -euo pipefail
 REPO="${PQA_COMMUNITY_REPO:-jag551197-jpg/prompt-quality-analyzer}"
 BRANCH="${PQA_COMMUNITY_BRANCH:-main}"
-VERSION="1.8.1"
+VERSION="1.8.2"
 [[ -d .git ]] || { echo "ERROR: run inside the PQA Community Git clone"; exit 2; }
 
 FORBIDDEN=("src/core/project-context.js" "docs/DOCUMENT_AWARE_ANALYSIS.md")

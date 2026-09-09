@@ -3,4 +3,28 @@ function dynamic(raw){if(lang==="en")return raw;const pt=lang==="pt";let m;if((m
 function tr(raw){return CATALOG[lang]?.[raw]||dynamic(raw)}function translateNode(el){if(!(el instanceof Element)||el.matches("script,style"))return;if(el.children.length===0&&el.textContent.trim()){if(!originalText.has(el))originalText.set(el,el.textContent);const src=originalText.get(el),key=src.trim(),val=tr(key);el.textContent=val===key?src:src.replace(key,val)}for(const attr of ["placeholder","title","aria-label"]){if(!el.hasAttribute(attr))continue;let m=originalAttrs.get(el);if(!m){m={};originalAttrs.set(el,m)}if(!(attr in m))m[attr]=el.getAttribute(attr);el.setAttribute(attr,tr(m[attr]))}}function translateTree(root=document.body){if(!root)return;translating=true;translateNode(root);root.querySelectorAll?.("*").forEach(translateNode);translating=false}
 export function detectLanguage(){const s=localStorage.getItem("pqa_language");if(LANGS[s])return s;const x=(navigator.languages?.[0]||navigator.language||"en").toLowerCase();return x.startsWith("pt")?"pt":x.startsWith("fr")?"fr":"en"}export function setLanguage(x){lang=LANGS[x]?x:"en";localStorage.setItem("pqa_language",lang);document.documentElement.lang=locale();translateTree();document.querySelectorAll("[data-pqa-lang]").forEach(b=>b.classList.toggle("active",b.dataset.pqaLang===lang));window.dispatchEvent(new CustomEvent("pqa:language",{detail:{language:lang,locale:locale()}}))}export const getLanguage=()=>lang;export const getLocale=()=>locale();export const t=tr;
 export function languageInstruction(){if(lang==="pt")return "Produza toda a análise, explicações, recomendações, mensagens de risco e relatório em português brasileiro profissional, natural e idiomático. Use terminologia técnica corrente no Brasil; evite traduções literais artificiais. Preserve identificadores técnicos estáveis, como reason codes, sem tradução.";if(lang==="fr")return "Produisez l’analyse, les explications, les recommandations, les messages de risque et le rapport dans un français professionnel, naturel et idiomatique. Utilisez la terminologie technique consacrée et conservez les identifiants techniques stables sans traduction.";return "Produce the analysis, explanations, recommendations, risk messages and report in professional US English using established technical terminology. Keep stable technical identifiers unchanged."}
-export function installLanguageUI(){const host=document.getElementById("languageSwitcher")||document.querySelector(".header-actions")||document.querySelector(".topbar");if(host&&!host.querySelector(".pqa-language-buttons")){const w=document.createElement("div");w.className="pqa-language-buttons";w.setAttribute("aria-label","Language");for(const[k,v]of Object.entries(LANGS)){const b=document.createElement("button");b.type="button";b.dataset.pqaLang=k;b.title=v.label;b.innerHTML=`<span>${v.flag}</span><b>${k==="pt"?"PT":k.toUpperCase()}</b>`;b.onclick=()=>setLanguage(k);w.appendChild(b)}host.appendChild(w)}setLanguage(detectLanguage());if(!window.__pqaI18nDialogs){window.__pqaI18nDialogs=true;const A=window.alert.bind(window),C=window.confirm.bind(window),P=window.prompt.bind(window);window.alert=(m)=>A(tr(String(m)));window.confirm=(m)=>C(tr(String(m)));window.prompt=(m,d)=>P(tr(String(m)),d)}const obs=new MutationObserver(ms=>{if(translating)return;for(const m of ms){if(m.type==="characterData"&&m.target.parentElement)translateTree(m.target.parentElement);for(const n of m.addedNodes){if(n.nodeType===1)translateTree(n);else if(n.nodeType===3&&n.parentElement)translateTree(n.parentElement)}}});obs.observe(document.body,{childList:true,subtree:true,characterData:true})}
+export function installLanguageUI(){
+  const buttons=[...document.querySelectorAll("[data-pqa-lang]")];
+  if(buttons.length!==3){
+    console.error("PQA i18n initialization failed: expected three language controls.");
+    return;
+  }
+  for(const b of buttons)b.addEventListener("click",()=>setLanguage(b.dataset.pqaLang));
+  setLanguage(detectLanguage());
+  if(!window.__pqaI18nDialogs){
+    window.__pqaI18nDialogs=true;
+    const A=window.alert.bind(window),C=window.confirm.bind(window),P=window.prompt.bind(window);
+    window.alert=(m)=>A(tr(String(m)));window.confirm=(m)=>C(tr(String(m)));window.prompt=(m,d)=>P(tr(String(m)),d);
+  }
+  const obs=new MutationObserver(ms=>{
+    if(translating)return;
+    for(const m of ms){
+      if(m.type==="characterData"&&m.target.parentElement)translateTree(m.target.parentElement);
+      for(const n of m.addedNodes){
+        if(n.nodeType===1)translateTree(n);
+        else if(n.nodeType===3&&n.parentElement)translateTree(n.parentElement);
+      }
+    }
+  });
+  obs.observe(document.body,{childList:true,subtree:true,characterData:true});
+}

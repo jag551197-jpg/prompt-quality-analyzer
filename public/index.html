@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>PQA Community — AI Instruction Reliability</title>
   <meta name="description" content="PQA evaluates AI instructions for quality, ambiguity, unsupported assumptions and hallucination risk before execution.">
-  <link rel="stylesheet" href="/styles.css?v=1.8.1">
+  <link rel="stylesheet" href="/styles.css?v=1.8.2">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 </head>
 <body>
@@ -23,7 +23,7 @@
     </nav>
     <div class="sidebar-meta">
       <span class="status-dot"></span><span>Engine ready</span>
-      <small>PQA v1.8.1</small>
+      <small>PQA v1.8.2</small>
       <small>Benchmark v4.1</small>
     </div>
   </aside>
@@ -35,7 +35,11 @@
         <h1>Analyze before AI executes.</h1>
       </div>
       <div class="header-actions">
-        <div id="languageSwitcher" class="pqa-language-switcher" aria-label="Language"></div>
+        <div id="languageSwitcher" class="pqa-language-switcher" aria-label="Language">
+          <button id="langEn" class="pqa-lang-button" type="button" data-pqa-lang="en" aria-label="English" title="English"><span aria-hidden="true">🇺🇸</span><b>EN</b></button>
+          <button id="langPt" class="pqa-lang-button" type="button" data-pqa-lang="pt" aria-label="Português (Brasil)" title="Português (Brasil)"><span aria-hidden="true">🇧🇷</span><b>PT</b></button>
+          <button id="langFr" class="pqa-lang-button" type="button" data-pqa-lang="fr" aria-label="Français" title="Français"><span aria-hidden="true">🇫🇷</span><b>FR</b></button>
+        </div>
         <button id="testJudge" class="button ghost compact">Test Gemini</button>
         <a class="button ghost compact" href="https://github.com/" target="_blank" rel="noreferrer">GitHub</a>
       </div>
@@ -43,7 +47,7 @@
 
     <main>
       <section id="benchmark" class="release-strip">
-        <div><span>ENGINE</span><b>v1.8.1</b></div>
+        <div><span>ENGINE</span><b>v1.8.2</b></div>
         <div><span>BENCHMARK</span><b>v4.1 · 300 cases</b></div>
         <div><span>RISK MODEL</span><b>Evidence-tiered v3</b></div>
         <div><span>MODE</span><b>Prompt-first · repo optional</b></div>
@@ -138,7 +142,7 @@
         <div class="surface">
           <div class="section-title"><div><p class="eyebrow">AUDITABILITY</p><h2>Evaluation provenance</h2></div><span class="badge success">TRACEABLE</span></div>
           <dl class="audit-list">
-            <div><dt>PQA engine</dt><dd id="auditEngine">v1.8.1</dd></div>
+            <div><dt>PQA engine</dt><dd id="auditEngine">v1.8.2</dd></div>
             <div><dt>Rubric</dt><dd id="auditRubric">—</dd></div>
             <div><dt>Risk model</dt><dd id="auditRiskModel">evidence-tiered-v3</dd></div>
             <div><dt>Scoring profile</dt><dd id="auditProfile">—</dd></div>
@@ -165,9 +169,9 @@
       </section>
     </main>
 
-    <footer>PQA v1.8.1 · Benchmark v4.1 · Prompt-level risk indicators are engineering signals, not guarantees of model behavior.</footer>
+    <footer>PQA v1.8.2 · Benchmark v4.1 · Prompt-level risk indicators are engineering signals, not guarantees of model behavior.</footer>
   </div>
 </div>
-<script type="module" src="/app.js?v=1.8.1"></script>
+<script type="module" src="/app.js?v=1.8.2"></script>
 </body>
 </html>
