@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.2 — i18n runtime partial-load hotfix
+- Prevented the live localization `MutationObserver` from retriggering itself on unchanged translated text.
+- Preserved translation of application-driven counters/status text while allowing new dynamic source text to replace stale cached text.
+- Added an i18n runtime-safety regression test.
+
 ## 1.8.2 — Visible language controls
 - Replaced dynamically generated language selector with permanent HTML buttons.
 - Added visible/clickable 🇺🇸 EN, 🇧🇷 PT and 🇫🇷 FR controls.
