@@ -1,4 +1,4 @@
-export const RUBRIC_VERSION = '2.0.0';
+export const RUBRIC_VERSION = '3.0.0';
 
 export const DIMENSIONS = {
   instruction_clarity: { label: 'Instruction Clarity' },
@@ -64,7 +64,14 @@ export function weightsFor(intendedUse='general') {
 
 export function weightedScore(scores, intendedUse='general') {
   const weights=weightsFor(intendedUse);
-  return Math.round(Object.entries(weights).reduce((sum,[key,w])=>sum+(Number(scores[key])||0)*w,0));
+  let weighted=0, activeWeight=0;
+  for (const [key,w] of Object.entries(weights)) {
+    const raw=scores?.[key];
+    if (raw == null || raw === '' || !Number.isFinite(Number(raw))) continue;
+    weighted += Number(raw) * w;
+    activeWeight += w;
+  }
+  return activeWeight > 0 ? Math.round(weighted / activeWeight) : 0;
 }
 
 export function qualityLevel(score) {

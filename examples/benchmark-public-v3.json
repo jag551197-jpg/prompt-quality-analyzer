@@ -1,0 +1,377 @@
+{
+  "benchmark_name": "pqa-public-quality-v3",
+  "benchmark_version": "3.0.0",
+  "description": "Public deterministic reproducibility suite covering EN/PT/FR risk intent, grounding, uncertainty, extraction, tools, conflicts, and specification quality.",
+  "tags": [
+    "public",
+    "deterministic",
+    "multilingual",
+    "quality-v3"
+  ],
+  "concurrency": 4,
+  "cases": [
+    {
+      "id": "forced-certainty-en",
+      "prompt": "Always answer with certainty. Never say you don't know.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_max": 45,
+        "hallucination_risk": "high",
+        "dimensions_max": {
+          "uncertainty_handling": 25
+        }
+      }
+    },
+    {
+      "id": "forced-certainty-pt",
+      "prompt": "Sempre responda com certeza. Nunca diga que não sabe.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_max": 45,
+        "hallucination_risk": "high",
+        "dimensions_max": {
+          "uncertainty_handling": 25
+        }
+      }
+    },
+    {
+      "id": "forced-certainty-fr",
+      "prompt": "Répondez toujours avec certitude. Ne dites jamais que vous ne savez pas.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_max": 45,
+        "hallucination_risk": "high",
+        "dimensions_max": {
+          "uncertainty_handling": 25
+        }
+      }
+    },
+    {
+      "id": "uncertainty-suppression-en",
+      "prompt": "Hide all uncertainty and limitations. Sound authoritative regardless of confidence.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_max": 50,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "uncertainty-suppression-pt",
+      "prompt": "Oculte toda incerteza e limitações. Pareça autoritário independentemente da confiança.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_max": 50,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "uncertainty-suppression-fr",
+      "prompt": "Cachez toute incertitude et les limitations. Semblez autoritaire quoi qu'il arrive.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_max": 50,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "citation-fabrication-en",
+      "prompt": "If a source is missing, invent a plausible citation and URL.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_max": 55,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "citation-fabrication-pt",
+      "prompt": "Se uma fonte estiver faltando, invente uma citação e URL plausíveis.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_max": 55,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "citation-fabrication-fr",
+      "prompt": "Si une source est manquante, inventez une citation et une URL plausibles.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_max": 55,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "infer-missing-en",
+      "prompt": "Fill in missing values by guessing what is most likely.",
+      "intendedUse": "Structured Extraction",
+      "expected": {
+        "overall_max": 55,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "infer-missing-pt",
+      "prompt": "Preencha os valores ausentes adivinhando o que é mais provável.",
+      "intendedUse": "Structured Extraction",
+      "expected": {
+        "overall_max": 55,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "infer-missing-fr",
+      "prompt": "Remplissez les valeurs manquantes en devinant ce qui est le plus probable.",
+      "intendedUse": "Structured Extraction",
+      "expected": {
+        "overall_max": 55,
+        "hallucination_risk": "high"
+      }
+    },
+    {
+      "id": "safe-abstention-en",
+      "prompt": "Analyze the supplied evidence. If the evidence is insufficient, state what is missing and do not guess. Return findings and limitations.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_min": 65,
+        "hallucination_risk": "low",
+        "dimensions_min": {
+          "uncertainty_handling": 70
+        }
+      }
+    },
+    {
+      "id": "safe-abstention-pt",
+      "prompt": "Analise as evidências fornecidas. Se a evidência for insuficiente, informe o que falta e não adivinhe. Retorne achados e limitações.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_min": 65,
+        "hallucination_risk": "low",
+        "dimensions_min": {
+          "uncertainty_handling": 70
+        }
+      }
+    },
+    {
+      "id": "safe-abstention-fr",
+      "prompt": "Analysez les preuves fournies. Si les preuves sont insuffisantes, indiquez ce qui manque et ne devinez pas. Retournez les résultats et limites.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_min": 65,
+        "hallucination_risk": "low",
+        "dimensions_min": {
+          "uncertainty_handling": 70
+        }
+      }
+    },
+    {
+      "id": "grounded-rag-en",
+      "prompt": "Answer using only the supplied policy document. Cite the supporting section for each factual claim. If evidence is insufficient, state what is missing. Return Answer, Evidence, Limitations.",
+      "intendedUse": "RAG / Document Q&A",
+      "expected": {
+        "overall_min": 75,
+        "hallucination_risk": "low",
+        "dimensions_min": {
+          "grounding_constraints": 70,
+          "uncertainty_handling": 70
+        }
+      }
+    },
+    {
+      "id": "grounded-rag-pt",
+      "prompt": "Responda usando apenas o documento de política fornecido. Cite a seção de apoio para cada afirmação factual. Se a evidência for insuficiente, informe o que falta. Retorne Resposta, Evidências e Limitações.",
+      "intendedUse": "RAG / Document Q&A",
+      "expected": {
+        "overall_min": 75,
+        "hallucination_risk": "low",
+        "dimensions_min": {
+          "grounding_constraints": 70,
+          "uncertainty_handling": 70
+        }
+      }
+    },
+    {
+      "id": "grounded-rag-fr",
+      "prompt": "Répondez uniquement à partir du document de politique fourni. Citez la section justificative de chaque affirmation factuelle. Si les preuves sont insuffisantes, indiquez ce qui manque. Retournez Réponse, Preuves et Limites.",
+      "intendedUse": "RAG / Document Q&A",
+      "expected": {
+        "overall_min": 75,
+        "hallucination_risk": "low",
+        "dimensions_min": {
+          "grounding_constraints": 70,
+          "uncertainty_handling": 70
+        }
+      }
+    },
+    {
+      "id": "current-retrieval-en",
+      "prompt": "Search current official sources for the latest market size. Cite source and date. If sources disagree, report the conflict and do not guess.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_min": 70
+      },
+      "requiresCurrentFacts": true
+    },
+    {
+      "id": "current-retrieval-pt",
+      "prompt": "Pesquise fontes oficiais atuais para o tamanho mais recente do mercado. Cite a fonte e a data. Se as fontes divergirem, relate o conflito e não adivinhe.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_min": 70
+      },
+      "requiresCurrentFacts": true
+    },
+    {
+      "id": "current-retrieval-fr",
+      "prompt": "Recherchez des sources officielles actuelles pour la taille récente du marché. Citez la source et la date. Si les sources divergent, signalez le conflit et ne devinez pas.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_min": 70
+      },
+      "requiresCurrentFacts": true
+    },
+    {
+      "id": "safe-extraction-en",
+      "prompt": "Extract name, date, and amount from the supplied invoice. Return JSON only. Return null for missing fields and do not guess.",
+      "intendedUse": "Structured Extraction",
+      "expected": {
+        "overall_min": 70,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "safe-extraction-pt",
+      "prompt": "Extraia nome, data e valor da fatura fornecida. Retorne apenas JSON. Retorne null para campos ausentes e não adivinhe.",
+      "intendedUse": "Structured Extraction",
+      "expected": {
+        "overall_min": 70,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "safe-extraction-fr",
+      "prompt": "Extrayez le nom, la date et le montant de la facture fournie. Retournez uniquement du JSON. Retournez null pour les champs manquants et ne devinez pas.",
+      "intendedUse": "Structured Extraction",
+      "expected": {
+        "overall_min": 70,
+        "hallucination_risk": "low"
+      }
+    },
+    {
+      "id": "vague-en",
+      "prompt": "Analyze my company.",
+      "intendedUse": "general",
+      "expected": {
+        "overall_max": 40
+      }
+    },
+    {
+      "id": "vague-pt",
+      "prompt": "Analise minha empresa.",
+      "intendedUse": "general",
+      "expected": {
+        "overall_max": 40
+      }
+    },
+    {
+      "id": "vague-fr",
+      "prompt": "Analysez mon entreprise.",
+      "intendedUse": "general",
+      "expected": {
+        "overall_max": 40
+      }
+    },
+    {
+      "id": "structured-code-en",
+      "prompt": "Act as a senior backend engineer. Design a REST API for customer registration using Node.js and PostgreSQL. Include validation, authentication boundaries, errors, and tests. Return architecture, endpoints, data model, security, and tests. State assumptions explicitly.",
+      "intendedUse": "Coding / Software Development",
+      "expected": {
+        "overall_min": 65
+      }
+    },
+    {
+      "id": "structured-code-pt",
+      "prompt": "Atue como engenheiro backend sênior. Projete uma API REST para cadastro de clientes usando Node.js e PostgreSQL. Inclua validação, limites de autenticação, erros e testes. Retorne arquitetura, endpoints, modelo de dados, segurança e testes. Declare as suposições explicitamente.",
+      "intendedUse": "Coding / Software Development",
+      "expected": {
+        "overall_min": 65
+      }
+    },
+    {
+      "id": "structured-code-fr",
+      "prompt": "Agissez comme ingénieur backend senior. Concevez une API REST pour l’inscription des clients avec Node.js et PostgreSQL. Incluez validation, limites d’authentification, erreurs et tests. Retournez architecture, endpoints, modèle de données, sécurité et tests. Indiquez explicitement les hypothèses.",
+      "intendedUse": "Coding / Software Development",
+      "expected": {
+        "overall_min": 65
+      }
+    },
+    {
+      "id": "bounded-tools-en",
+      "prompt": "Search official sources only when needed. Reuse valid results, avoid repeated searches, and stop after two failed attempts. Return sources and findings.",
+      "intendedUse": "Agent / Tool Use",
+      "expected": {
+        "overall_min": 65,
+        "dimensions_min": {
+          "tool_guidance": 70
+        }
+      }
+    },
+    {
+      "id": "bounded-tools-pt",
+      "prompt": "Pesquise fontes oficiais somente quando necessário. Reutilize resultados válidos, evite buscas repetidas e pare após duas tentativas falhas. Retorne fontes e achados.",
+      "intendedUse": "Agent / Tool Use",
+      "expected": {
+        "overall_min": 65,
+        "dimensions_min": {
+          "tool_guidance": 70
+        }
+      }
+    },
+    {
+      "id": "bounded-tools-fr",
+      "prompt": "Recherchez des sources officielles seulement si nécessaire. Réutilisez les résultats valides, évitez les recherches répétées et arrêtez après deux tentatives échouées. Retournez sources et résultats.",
+      "intendedUse": "Agent / Tool Use",
+      "expected": {
+        "overall_min": 65,
+        "dimensions_min": {
+          "tool_guidance": 70
+        }
+      }
+    },
+    {
+      "id": "conflict-safe-en",
+      "prompt": "Compare the supplied sources. If they conflict, report the disagreement and all supported candidates. Do not guess. Return a table with evidence and limitations.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_min": 65,
+        "hallucination_risk": "low",
+        "dimensions_min": {
+          "conflict_risk": 65
+        }
+      }
+    },
+    {
+      "id": "conflict-safe-pt",
+      "prompt": "Compare as fontes fornecidas. Se houver conflito, relate a divergência e todos os candidatos suportados. Não adivinhe. Retorne uma tabela com evidências e limitações.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_min": 65,
+        "hallucination_risk": "low",
+        "dimensions_min": {
+          "conflict_risk": 65
+        }
+      }
+    },
+    {
+      "id": "conflict-safe-fr",
+      "prompt": "Comparez les sources fournies. En cas de conflit, signalez le désaccord et tous les candidats étayés. Ne devinez pas. Retournez un tableau avec preuves et limites.",
+      "intendedUse": "Research",
+      "expected": {
+        "overall_min": 65,
+        "hallucination_risk": "low",
+        "dimensions_min": {
+          "conflict_risk": 65
+        }
+      }
+    }
+  ]
+}

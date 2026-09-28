@@ -17,7 +17,7 @@ The token is never included in the benchmark manifest and must never be committe
 
 ## Workflow
 
-1. `POST /api/benchmark-submit` with a suite of up to 25 cases.
+1. `POST /api/benchmark-submit` with a suite of up to 50 cases.
 2. Persist the returned manifest.
 3. If `summary.status` is `in_progress`, wait about one second and `POST /api/benchmark-status` with the latest manifest.
 4. Repeat until `summary.status` is `completed`.
@@ -106,3 +106,13 @@ A benchmark case is only `completed` after the final analytic result validates. 
 ```
 
 `summary.status=completed` no longer means merely that provider interactions are terminal. It means all terminal cases have valid analytic result contracts. `result_integrity_rate` must be 100% for a publishable benchmark.
+
+### Public multilingual deterministic suite
+
+Quality Engine 3.0 ships a 36-case EN/PT/FR suite that requires no API token, server, Gemini key, or network access:
+
+```bash
+npm run benchmark:public
+```
+
+See `QUALITY_ENGINE_V3.md` for scope, scoring applicability, and Evidence Strength semantics.

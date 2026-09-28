@@ -17,7 +17,7 @@ test('benchmark expectation checks work',()=>{
 });
 
 test('completed judge result finalizes and summarizes benchmark',()=>{
-  const suite=validateBenchmarkSuite({cases:[{id:'x',prompt:'Summarize this code.',expected:{overall_min:70}}]});
+  const suite=validateBenchmarkSuite({cases:[{id:'x',prompt:'Summarize this code.',expected:{overall_max:60}}]});
   const run=createBenchmarkRun(suite);const c=run.cases[0];c.interaction_id='abc';
   const judge={status:'completed',interaction_id:'abc',duration_ms:5,result:{scores:{instruction_clarity:90,context_sufficiency:80,grounding_constraints:80,uncertainty_handling:80,output_contract:80,tool_guidance:80,conflict_risk:90,context_efficiency:90},hallucination_risk:'low',strengths:[],weaknesses:[],risk_indicators:[],recommendations:[],improved_prompt:'Better prompt',confidence:.9}};
   run.cases[0]=finalizeBenchmarkCase(c,judge,{geminiApiKey:'x',geminiModel:'test'});

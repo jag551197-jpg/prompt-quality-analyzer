@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { buildDeterministicResult, buildHybridResult } from './analyze.js';
 
 export const BENCHMARK_VERSION = '1.1.0';
-export const DEFAULT_MAX_CASES = 25;
+export const DEFAULT_MAX_CASES = 50;
 const TERMINAL_FAILURES = new Set(['failed','cancelled','incomplete','budget_exceeded','not-configured','submit-failed','invalid-result']);
 
 function clampInt(v, fallback, min, max) {

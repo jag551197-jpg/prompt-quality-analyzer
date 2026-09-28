@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>PQA Community — AI Instruction Reliability</title>
   <meta name="description" content="PQA evaluates AI instructions for quality, ambiguity, unsupported assumptions and hallucination risk before execution.">
-  <link rel="stylesheet" href="/styles.css?v=1.8.2">
+  <link rel="stylesheet" href="/styles.css?v=1.10.0">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 </head>
 <body>
@@ -23,7 +23,7 @@
     </nav>
     <div class="sidebar-meta">
       <span class="status-dot"></span><span>Engine ready</span>
-      <small>PQA v1.8.2</small>
+      <small>PQA v1.10.0</small>
       <small>Benchmark v4.1</small>
     </div>
   </aside>
@@ -41,13 +41,13 @@
           <button id="langFr" class="pqa-lang-button" type="button" data-pqa-lang="fr" aria-label="Français" title="Français"><span aria-hidden="true">🇫🇷</span><b>FR</b></button>
         </div>
         <button id="testJudge" class="button ghost compact">Test Gemini</button>
-        <a class="button ghost compact" href="https://github.com/" target="_blank" rel="noreferrer">GitHub</a>
+        <a class="button ghost compact" href="https://github.com/jag551197-jpg/prompt-quality-analyzer" target="_blank" rel="noreferrer">GitHub</a>
       </div>
     </header>
 
     <main>
       <section id="benchmark" class="release-strip">
-        <div><span>ENGINE</span><b>v1.8.2</b></div>
+        <div><span>ENGINE</span><b>v1.10.0</b></div>
         <div><span>BENCHMARK</span><b>v4.1 · 300 cases</b></div>
         <div><span>RISK MODEL</span><b>Evidence-tiered v3</b></div>
         <div><span>MODE</span><b>Prompt-first · repo optional</b></div>
@@ -56,7 +56,7 @@
       <section class="metric-grid" aria-label="Reliability overview">
         <article class="metric-card"><div><span>QUALITY SCORE</span><b id="scoreCard">—</b></div><small id="scoreCardSub">No analysis yet</small></article>
         <article class="metric-card"><div><span>HALLUCINATION RISK</span><b id="riskCard">—</b></div><small id="riskCardSub">Awaiting evaluation</small></article>
-        <article class="metric-card"><div><span>CONFIDENCE</span><b id="confidenceCard">—</b></div><small id="confidenceCardSub">Score confidence</small></article>
+        <article class="metric-card"><div><span>EVIDENCE STRENGTH</span><b id="confidenceCard">—</b></div><small id="confidenceCardSub">Structural evidence coverage</small></article>
         <article class="metric-card"><div><span>LOCAL TREND</span><b id="trendValue">—</b></div><small id="trendSub">Recent browser analyses</small></article>
       </section>
 
@@ -90,6 +90,8 @@
           <label>Use case<select id="useCase"><option>General</option><option>RAG / Document Q&A</option><option>Customer Support</option><option>Coding / Software Development</option><option>Research</option><option>Data Analysis</option><option>Agent / Tool Use</option><option>Structured Extraction</option></select></label>
           <label>Prompt<textarea id="prompt" maxlength="30000" placeholder="Example: Look at this API and fix why it is slow. Don't break anything. Give me the files I need to change."></textarea></label>
           <label>Optional evidence / context<textarea id="context" class="small" maxlength="60000" placeholder="Selected logs, requirements, code excerpt, document text, acceptance criteria..."></textarea></label>
+          <div class="community-file-upload"><div class="subhead"><div><h3>Limited file context</h3><span>1 text file · 256 KB max</span></div><span class="badge neutral">Community</span></div><input id="communityFile" type="file" hidden accept=".txt,.md,.markdown,.json,.csv,.yaml,.yml,.js,.ts,.py,.html,.htm,.xml,.log"><button id="pickCommunityFile" class="dropzone" type="button"><b>Upload one text file</b><span>Scanned locally before its text is added to context.</span><small>.txt .md .json .csv .yaml .js .ts .py .html .xml .log</small></button><div id="communityFileStatus" class="file-status muted">No file selected.</div></div>
+          <section class="guard-panel" id="guardPanel"><div class="subhead"><div><h3>PQA Guard Community</h3><span>pre-execution input scan</span></div><span class="severity unknown" id="guardSeverity">NOT SCANNED</span></div><p>Scans prompts and uploaded text for prompt injection, instruction override, secret-exfiltration requests, encoded payloads, credential material, and active-script indicators.</p><div id="guardFindings" class="guard-findings"><span class="muted">Run an analysis or upload a file to scan.</span></div><small>Heuristic defense layer only. It is not antivirus, a malware sandbox, or a guarantee that content is safe.</small></section>
           <label class="check"><input id="current" type="checkbox"> Requires current / time-sensitive facts</label>
           <div class="actionrow"><button id="analyze" class="button primary">Analyze instruction</button><button id="cancel" class="button ghost" disabled>Cancel</button></div>
           <p class="privacy">Prompt/context required for refresh recovery is stored locally in this browser. The application does not persist it on the server. If Gemini is enabled, evaluation content is sent to the configured Gemini endpoint.</p>
@@ -105,11 +107,40 @@
             <div class="risk-stack">
               <span>Hallucination risk <b id="risk">—</b></span>
               <span>Score range <b id="scoreRange">—</b></span>
-              <span>Confidence <b id="scoreConfidence">—</b></span>
+              <span>Evidence strength <b id="scoreConfidence">—</b></span>
               <span>Evaluation mode <b id="evaluationMode">—</b></span>
             </div>
           </div>
 
+
+<div class="hallucination-explainer-wrap">
+<details class="hallucination-explainer" id="hallucinationExplainer">
+<summary>
+  <div><span class="hall-kicker">HALLUCINATION EXPLAINER</span><b>Why this prompt may hallucinate</b><small>Risk mechanics, not a probability claim</small></div>
+  <span class="hall-risk-pill" id="hallRiskIndex">—/100</span>
+</summary>
+<div class="hallucination-body">
+  <div class="hall-probability-note"><span class="badge neutral" id="hallProbabilityStatus">NOT CALIBRATED</span><p id="hallProbabilityText">PQA reports a prompt-level risk index, not a calibrated probability that a model response will hallucinate.</p></div>
+  <div class="hall-metric-grid">
+    <article><span>ANSWERABILITY</span><b id="hallAnswerability">—</b><small id="hallAnswerabilityLabel">Awaiting analysis</small></article>
+    <article><span>GROUNDING REQUIREMENT</span><b id="hallGrounding">—</b><small id="hallGroundingLabel">Awaiting analysis</small></article>
+    <article><span>HALLUCINATION PRESSURE</span><b id="hallPressure">—</b><small id="hallPressureLabel">Awaiting analysis</small></article>
+    <article><span>ABSTENTION SAFETY</span><b id="hallAbstention">—</b><small id="hallAbstentionLabel">Awaiting analysis</small></article>
+    <article><span>CURRENT-FACT DEPENDENCY</span><b id="hallCurrentDependency">—</b><small id="hallCurrentDependencyLabel">Awaiting analysis</small></article>
+  </div>
+  <div class="hall-remediation is-hidden" id="hallRemediation"><div><span>ORIGINAL</span><b id="hallOriginalRisk">—</b></div><span class="hall-arrow">→</span><div><span>RECOMMENDED PROMPT</span><b id="hallRecommendedRisk">—</b></div><small id="hallReduction">—</small></div>
+  <div class="hall-two-col">
+    <section><div class="subhead"><h3>Main risk drivers</h3><span>point contribution</span></div><div class="hall-list" id="hallDrivers"><p class="muted">No analysis yet.</p></div></section>
+    <section><div class="subhead"><h3>Risk categories</h3><span>0–100 index</span></div><div class="hall-categories" id="hallCategories"></div></section>
+  </div>
+  <div class="hall-two-col">
+    <section><div class="subhead"><h3>What would reduce risk</h3><span>projected change</span></div><div class="hall-list" id="hallInterventions"><p class="muted">No analysis yet.</p></div></section>
+    <section><div class="subhead"><h3>Execution conditions</h3><span>scenario sensitivity</span></div><div class="hall-list" id="hallScenarios"><p class="muted">No analysis yet.</p></div></section>
+  </div>
+  <p class="hall-disclaimer" id="hallDisclaimer">Risk index and projected reductions are engineering decision-support signals, not empirical probabilities or guarantees of model behavior.</p>
+</div>
+</details>
+</div>
           <div id="dimensions" class="dimensions"></div>
 
           <div class="two-col-blocks">
@@ -142,7 +173,7 @@
         <div class="surface">
           <div class="section-title"><div><p class="eyebrow">AUDITABILITY</p><h2>Evaluation provenance</h2></div><span class="badge success">TRACEABLE</span></div>
           <dl class="audit-list">
-            <div><dt>PQA engine</dt><dd id="auditEngine">v1.8.2</dd></div>
+            <div><dt>PQA engine</dt><dd id="auditEngine">v1.9.1</dd></div>
             <div><dt>Rubric</dt><dd id="auditRubric">—</dd></div>
             <div><dt>Risk model</dt><dd id="auditRiskModel">evidence-tiered-v3</dd></div>
             <div><dt>Scoring profile</dt><dd id="auditProfile">—</dd></div>
@@ -169,9 +200,9 @@
       </section>
     </main>
 
-    <footer>PQA v1.8.2 · Benchmark v4.1 · Prompt-level risk indicators are engineering signals, not guarantees of model behavior.</footer>
+    <footer>PQA v1.10.0 · Benchmark v4.1 · Prompt-level risk indicators are engineering signals, not guarantees of model behavior.</footer>
   </div>
 </div>
-<script type="module" src="/app.js?v=1.8.2"></script>
+<script type="module" src="/app.js?v=1.9.1"></script>
 </body>
 </html>

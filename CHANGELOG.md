@@ -1,3 +1,15 @@
+## 1.9.1 — Hallucination Risk Explainer
+- Adds the same explainable prompt-level hallucination risk model without claiming an empirical probability.
+- Keeps Quality Engine 3.0 scoring behavior and multilingual intent logic intact.
+
+## 1.9.0 — Multilingual intent-aware Quality Engine 3.0
+
+- Added EN/PT/FR deterministic danger detection and intent-aware abstention handling.
+- Added deterministic recommended-prompt rewriting without Gemini.
+- Replaced probability-like deterministic confidence with structural Evidence Strength.
+- Dimension scores are evidence-based; irrelevant dimensions are N/A and excluded from weighted denominators.
+- Added 36-case public multilingual regression suite (`npm run benchmark:public`).
+
 # Changelog
 
 ## 1.8.2 — i18n runtime partial-load hotfix

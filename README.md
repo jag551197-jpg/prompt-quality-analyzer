@@ -156,7 +156,7 @@ v1.5.0 includes a stateless benchmark API suitable for Netlify, Linux, GitHub Ac
 
 `POST /api/benchmark-submit`
 
-The request contains up to 25 cases. Each case gets an immediate deterministic baseline and, when Gemini is configured, a background Gemini Interaction ID. The response is the benchmark manifest; clients should persist it.
+The request contains up to 50 cases. Each case gets an immediate deterministic baseline and, when Gemini is configured, a background Gemini Interaction ID. The response is the benchmark manifest; clients should persist it.
 
 ### Poll a batch
 
@@ -188,3 +188,13 @@ A case may declare expectations such as:
 ```
 
 The benchmark API is for calibration and regression testing. Expected thresholds should be human-reviewed and versioned with the rubric; they are not probabilities of hallucination or correctness.
+
+### Public multilingual deterministic suite
+
+Quality Engine 3.0 ships a 36-case EN/PT/FR suite that requires no API token, server, Gemini key, or network access:
+
+```bash
+npm run benchmark:public
+```
+
+See `QUALITY_ENGINE_V3.md` for scope, scoring applicability, and Evidence Strength semantics.

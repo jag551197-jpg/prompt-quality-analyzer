@@ -1,9 +1,14 @@
-import {getLanguage,getLocale,languageInstruction,installLanguageUI} from './i18n.js';
+import {getLanguage,getLocale,languageInstruction,installLanguageUI,t as tr} from './i18n.js';
 import { estimateSavings, recordSavings, walletSummary, resetWallet, loadPricing, MODEL_VERSION } from './savings.js';
 import { clearTransactions, getTransaction, listTransactions } from './idb.js';
 import { cancelTransaction, createAnalysisTransaction, executeTransaction, getEstimatedProgress, resumePendingTransactions, subscribeTransactionUpdates, TERMINAL_STATES } from './job-manager.js';
+import {scanText,inspectFile,mergeScan} from './guard.js';
 
 const $ = id => document.getElementById(id);
+let communityFileScan=null;
+function renderGuard(promptText=''){const promptScan=scanText(promptText||$('prompt')?.value||''),combined=mergeScan(promptScan,communityFileScan);const sev=$('guardSeverity'),host=$('guardFindings');if(sev){sev.textContent=combined.severity==='clear'?tr('CLEAR'):tr(combined.severity.toUpperCase());sev.className=`severity ${combined.severity==='clear'?'low':combined.severity}`;}if(host)host.innerHTML=combined.findings.length?combined.findings.map(f=>`<div class="guard-finding"><b>${f.severity.toUpperCase()}</b><span>${tr(f.label)}</span></div>`).join(''):`<span class="guard-clear">${tr('No community scanner indicators detected.')}</span>`;return combined;}
+async function handleCommunityFile(file){const status=$('communityFileStatus');if(!file)return;status.textContent=tr('Scanning file…');try{const result=await inspectFile(file);communityFileScan=result;if(!result.allowed){status.textContent=`${tr('Blocked')}: ${tr(result.findings?.[0]?.label||'file not allowed')}`;renderGuard();return;}const prior=$('context').value.trim();$('context').value=[prior,`--- Community file: ${result.name} ---`,result.text].filter(Boolean).join('\n\n').slice(0,60000);status.textContent=`${result.name} · ${(result.size/1024).toFixed(1)} KB · ${tr('scanned')} · ${tr(result.severity)}`;renderGuard();}catch(e){communityFileScan=null;status.textContent=`${tr('File scan failed')}: ${e.message||e}`;renderGuard();}}
+
 installLanguageUI();
 const btn = $('analyze');
 let activeId = null;
@@ -38,6 +43,35 @@ function pct(v) { const n=Number(v); return Number.isFinite(n) ? `${Math.round(n
 function riskClass(r='') { const x=String(r).toLowerCase(); return ['low','medium','high'].includes(x) ? x : 'unknown'; }
 function severityLabel(r='') { const x=String(r).toLowerCase(); return x==='high'?'CRITICAL REVIEW':x==='medium'?'REVIEW ADVISED':x==='low'?'LOW RISK':'NOT EVALUATED'; }
 function chips(el, items=[]) { el.innerHTML = items.length ? items.map(x=>`<span class="chip">${esc(x)}</span>`).join('') : '<span class="chip muted-chip">No reason codes</span>'; }
+function hallLabel(v=''){return tr(String(v).replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase()));}
+function hallBandClass(v=''){const x=String(v).toLowerCase();return ['low','moderate','high','very_high'].includes(x)?`hall-${x.replace('_','-')}`:'hall-unknown';}
+function renderHallucinationAnalysis(r){
+  const h=r?.hallucination_analysis;if(!h||!$('hallucinationExplainer'))return;
+  const idx=Number(h.risk_index);
+  $('hallRiskIndex').textContent=Number.isFinite(idx)?`${Math.round(idx)}/100`:'—/100';
+  $('hallRiskIndex').className=`hall-risk-pill ${hallBandClass(h.risk_band)}`;
+  $('hallProbabilityStatus').textContent=tr('NOT CALIBRATED');
+  $('hallProbabilityText').textContent=tr(h.probability_explanation||'PQA reports a prompt-level risk index, not a calibrated probability that a model response will hallucinate.');
+  const put=(valueId,labelId,obj,valueKey='score',labelKey='label')=>{if(!$(valueId))return;const n=Number(obj?.[valueKey]);$(valueId).textContent=Number.isFinite(n)?`${Math.round(n)}/100`:'—';$(labelId).textContent=hallLabel(obj?.[labelKey]||'—');};
+  put('hallAnswerability','hallAnswerabilityLabel',h.answerability);
+  put('hallPressure','hallPressureLabel',h.hallucination_pressure,'score','band');
+  put('hallAbstention','hallAbstentionLabel',h.abstention_safety);
+  put('hallCurrentDependency','hallCurrentDependencyLabel',h.current_information_dependency,'score','level');
+  const gr=h.grounding_requirement||{};$('hallGrounding').textContent=Number.isFinite(Number(gr.score))?`${Math.round(Number(gr.score))}/100`:'—';$('hallGroundingLabel').textContent=hallLabel(gr.level||'—');
+  const cmp=h.remediation_comparison||null;
+  $('hallRemediation').classList.toggle('is-hidden',!cmp);
+  if(cmp){$('hallOriginalRisk').textContent=`${cmp.original_risk_index}/100 · ${hallLabel(cmp.original_band)}`;$('hallRecommendedRisk').textContent=`${cmp.recommended_risk_index}/100 · ${hallLabel(cmp.recommended_band)}`;$('hallReduction').textContent=`${tr('Projected reduction')}: −${cmp.reduction} ${tr('points')}`;}
+  const drivers=Array.isArray(h.drivers)?h.drivers:[];
+  $('hallDrivers').innerHTML=drivers.length?drivers.slice(0,8).map(d=>`<div class="hall-row"><span>${esc(tr(d.label||d.code))}</span><b>+${Math.round(Number(d.points)||0)}</b></div>`).join(''):`<p class="muted">${esc(tr('No material prompt-level hallucination drivers detected.'))}</p>`;
+  const catLabels={factual_fabrication:'Factual fabrication',unsupported_inference:'Unsupported inference',citation_fabrication:'Citation fabrication',temporal_staleness:'Temporal staleness',entity_ambiguity:'Entity ambiguity'};
+  $('hallCategories').innerHTML=Object.entries(h.categories||{}).map(([k,v])=>{const n=Math.max(0,Math.min(100,Number(v?.score)||0));return `<div class="hall-category"><div><span>${esc(tr(catLabels[k]||k))}</span><b>${Math.round(n)}</b></div><div class="hall-track"><i class="pct-${Math.round(n)}"></i></div><small>${esc(hallLabel(v?.band||'low'))}</small></div>`;}).join('');
+  const interventions=Array.isArray(h.interventions)?h.interventions:[];
+  $('hallInterventions').innerHTML=interventions.length?interventions.slice(0,6).map(x=>`<div class="hall-row hall-intervention"><span>${esc(tr(x.label||x.code))}<small>${esc(tr('Projected risk'))}: ${x.projected_risk_index}/100 · ${esc(hallLabel(x.projected_band))}</small></span><b>−${Math.round(Number(x.reduction)||0)}</b></div>`).join(''):`<p class="muted">${esc(tr('No additional risk-reduction intervention is indicated by the deterministic layer.'))}</p>`;
+  const scenarios=Array.isArray(h.execution_scenarios)?h.execution_scenarios:[];
+  $('hallScenarios').innerHTML=scenarios.map(x=>`<div class="hall-row hall-scenario"><span>${esc(tr(x.label||x.scenario))}<small>${esc(tr(x.assumption||''))}</small></span><b class="${hallBandClass(x.risk_band)}">${x.risk_index}</b></div>`).join('');
+  $('hallDisclaimer').textContent=tr(h.disclaimer||'Risk index and projected reductions are engineering decision-support signals, not empirical probabilities or guarantees of model behavior.');
+}
+
 function renderResult(r) {
   if (!r) return;
   const score=r.overall_score ?? '—';
@@ -48,17 +82,19 @@ function renderResult(r) {
   $('risk').textContent=risk;
   $('riskCard').textContent=risk;
   $('riskCard').className=`risk-${riskClass(r.hallucination_risk)}`;
+  renderHallucinationAnalysis(r);
   $('scoreCardSub').textContent=r.score_range?.length===2 ? `Expected range ${r.score_range[0]}–${r.score_range[1]}` : 'Current instruction';
-  $('riskCardSub').textContent=`${(r.risk_indicators||[]).length} detected risk indicator${(r.risk_indicators||[]).length===1?'':'s'}`;
-  $('confidenceCard').textContent=pct(r.score_confidence);
-  $('confidenceCardSub').textContent=`Risk confidence ${pct(r.risk_confidence)}`;
-  $('scoreRange').textContent=r.score_range?.length===2 ? `${r.score_range[0]}–${r.score_range[1]}` : '—';
-  $('scoreConfidence').textContent=pct(r.score_confidence);
+  $('riskCardSub').textContent=Number.isFinite(Number(r.hallucination_analysis?.risk_index))?`${tr('Risk index')} ${Math.round(Number(r.hallucination_analysis.risk_index))}/100 · ${(r.risk_indicators||[]).length} ${tr('drivers')}`:`${(r.risk_indicators||[]).length} detected risk indicator${(r.risk_indicators||[]).length===1?'':'s'}`;
+  const evidenceStrength=r.analysis_evidence_strength||{};
+  $('confidenceCard').textContent=pct(evidenceStrength.value);
+  $('confidenceCardSub').textContent=tr('Structural evidence coverage');
+  $('scoreRange').textContent=r.score_range?.length===2 ? `${r.score_range[0]}–${r.score_range[1]}` : tr('Not calibrated');
+  $('scoreConfidence').textContent=pct(evidenceStrength.value);
   $('evaluationMode').textContent=(r.evaluation_mode||'—').replaceAll('-',' ');
   const sev=$('severityBadge'); sev.className=`severity ${riskClass(r.hallucination_risk)}`; sev.textContent=severityLabel(r.hallucination_risk);
   $('judge').textContent=r.judge?.model || 'Not configured';
   $('judgeLatency').textContent=fmtMs(r.judge?.duration_ms);
-  $('dimensions').innerHTML=Object.values(r.dimensions || {}).map(d=>`<div class="dim"><div class="dimline"><span>${esc(d.label)}</span><b>${d.score}</b></div><div class="bar"><i class="pct-${Math.round(Math.max(0,Math.min(100,d.score)))}"></i></div></div>`).join('');
+  $('dimensions').innerHTML=Object.values(r.dimensions || {}).map(d=>{const applicable=d.applicable!==false&&Number.isFinite(Number(d.score));const score=applicable?Number(d.score):0;return `<div class="dim ${applicable?'':'dim-na'}"><div class="dimline"><span>${esc(d.label)}</span><b>${applicable?Math.round(score):'N/A'}</b></div><div class="bar"><i class="pct-${applicable?Math.round(Math.max(0,Math.min(100,score))):0}"></i></div></div>`;}).join('');
   list($('issues'),r.weaknesses,'No major reliability gaps identified.');
   list($('recs'),r.recommendations,'No recommendations.');
   list($('strengths'),r.strengths,'No explicit protective controls detected.');
@@ -67,7 +103,7 @@ function renderResult(r) {
   $('improved').value=r.improved_prompt || '';
   $('reanalyze').disabled=!r.improved_prompt;
   $('disclaimer').textContent=(r.disclaimer || '') + (r.judge?.error ? ` Judge fallback: ${r.judge.error}` : '');
-  $('auditEngine').textContent=`v${r.version||'1.8.2'}`;
+  $('auditEngine').textContent=`v${r.version||'3.0.0'}`;
   $('auditRubric').textContent=r.rubric_version || '—';
   $('auditRiskModel').textContent=r.calibration?.risk_model || 'evidence-tiered-v3';
   $('auditProfile').textContent=r.scoring_profile || r.calibration?.profile || '—';
@@ -144,6 +180,8 @@ function startPolling() {
 async function startAnalysis(promptOverride) {
   const prompt=promptOverride ?? $('prompt').value;
   if (!prompt.trim()) return alert('Paste a prompt first.');
+  const guard=renderGuard(prompt);
+  if(guard.severity==='high'&&!confirm(tr('PQA Guard found high-risk input indicators. Continue analysis anyway?'))) return;
   btn.disabled=true; btn.textContent='Queued…';
   const payload={ prompt, context:$('context').value, intendedUse:$('useCase').value, requiresCurrentFacts:$('current').checked, ui_language:getLanguage(), ui_locale:getLocale(), response_language_instruction:languageInstruction() };
   const tx=await createAnalysisTransaction(payload);
@@ -154,6 +192,7 @@ async function startAnalysis(promptOverride) {
   void executeTransaction(tx.id);
 }
 
+$('pickCommunityFile')?.addEventListener('click',()=>$('communityFile')?.click());$('communityFile')?.addEventListener('change',e=>handleCommunityFile(e.target.files?.[0]));$('prompt')?.addEventListener('input',()=>renderGuard());renderGuard();
 btn.addEventListener('click',()=>startAnalysis().catch(e=>alert(e.message)));
 $('reanalyze').addEventListener('click',()=>{ $('prompt').value=$('improved').value; startAnalysis($('improved').value).catch(e=>alert(e.message)); });
 $('cancel').addEventListener('click',async()=>{ if(activeId){ await cancelTransaction(activeId); await pollActive(); }});
