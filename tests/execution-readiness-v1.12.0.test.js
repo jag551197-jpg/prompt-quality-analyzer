@@ -19,8 +19,8 @@ test('requirements file is not mistaken for executable code',()=>{
  assert.equal(a.status,'requirements_ready_codebase_missing');
  assert.ok(a.scores.implementation_context_sufficiency<50);
  assert.match(a.recommended_prompt,/Não há código\/repositório disponível/);
- assert.ok(a.generated_outputs.some(x=>x.filename==='IMPROVED_REQUIREMENTS.md'));
- assert.match(a.generated_outputs.find(x=>x.filename==='IMPROVED_REQUIREMENTS.md').content,/Saldo Final/);
+ assert.ok(a.generated_outputs.some(x=>x.filename==='REQUISITOS_APRIMORADOS.md'));
+ assert.match(a.generated_outputs.find(x=>x.filename==='REQUISITOS_APRIMORADOS.md').content,/Saldo Final/);
 });
 
 test('supplied code prevents false missing-code conclusion',()=>{
@@ -51,12 +51,13 @@ test('repository URL is treated as an unverified pointer, not verified source co
  assert.match(a.notice,/did not verify or retrieve/);assert.ok(a.access_requirements.length>0);
 });
 
-test('generated fallback artifacts follow selected language and preserve source requirements',()=>{
+test('generated fallback artifacts use selected language in filename and content',()=>{
  const pt=assessExecutionReadiness({prompt:'Implemente os requisitos.',context:req,ui_language:'pt'});
  const fr=assessExecutionReadiness({prompt:'Implémentez les exigences.',context:req,ui_language:'fr'});
- assert.match(pt.generated_outputs.find(x=>x.filename==='README_EXECUTION.md').content,/Pacote de Execução PQA/);
- assert.match(fr.generated_outputs.find(x=>x.filename==='README_EXECUTION.md').content,/Dossier d’exécution PQA/);
- assert.match(pt.generated_outputs.find(x=>x.filename==='IMPROVED_REQUIREMENTS.md').content,/Saldo Final/);
+ assert.match(pt.generated_outputs.find(x=>x.filename==='LEIA_ME_EXECUCAO.md').content,/Pacote de Execução PQA/);
+ assert.match(fr.generated_outputs.find(x=>x.filename==='LISEZ_MOI_EXECUTION.md').content,/Dossier d’exécution PQA/);
+ assert.match(pt.generated_outputs.find(x=>x.filename==='REQUISITOS_APRIMORADOS.md').content,/Saldo Final/);
+ assert.ok(fr.generated_outputs.some(x=>x.filename==='EXIGENCES_AMELIOREES.md'));
 });
 
 test('artifact signing is authorized by generated-output manifest and secret stays off browser',()=>{

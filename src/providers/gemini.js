@@ -28,6 +28,9 @@ Scoring principles:
 21. When the supplied context is a requirements/specification or document that benefits from a stronger execution artifact, return generated_outputs with complete substantive Markdown files. Prefer IMPROVED_REQUIREMENTS.md, ISSUES_AND_GAPS.md, IMPLEMENTATION_PLAN.md, TRACEABILITY_MATRIX.md and README_EXECUTION.md. Ground every substantive change in the supplied sources; label assumptions and missing implementation artifacts. Do not return empty shells or generic placeholders when the source supports detail.
 22. generated_outputs are authored by PQA from supplied material. Include source identifiers where useful. Do not invent signatures; the application adds authoring and integrity/signature metadata after generation.
 
+23. SOURCE-CODE ALIGNMENT: when source code is supplied, compare the instruction and authoritative source requirements against the actual code. Identify exact evidence for implemented requirements, missing identifiers/capabilities, incomplete/TODO markers, test coverage gaps, configuration/API/schema mismatches, and candidate contradictions. Do not claim behavioral correctness from static text alone; distinguish verified code evidence, candidate mismatch, and runtime/test-required conclusions.
+24. GENERATED ARTIFACT LANGUAGE: every generated filename AND every generated file body must use the language selected by the interface/output-language requirement. English filenames are only valid when English is selected; use Portuguese filenames/content for PT-BR and French filenames/content for FR. Keep technical identifiers, hashes, paths, API names, environment variables, and source symbols unchanged when translation would break interoperability.
+
 Rubric version: ${rubricVersion}
 Scoring profile: ${profile}
 Intended use: ${intendedUse}
