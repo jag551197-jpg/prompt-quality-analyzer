@@ -20,6 +20,14 @@ Scoring principles:
 7. Hallucination risk is prompt-level risk only. Use HIGH primarily for explicit hallucination-inducing behavior or current factual requests without any grounding/retrieval. Use MEDIUM for meaningful missing safeguards. Use LOW when no explicit dangerous behavior exists and relevant protective controls are present.
 8. Preserve user intent when proposing an improved prompt. Do not add facts not supplied by the user.
 
+16. ATTACHMENT GROUNDING IS MANDATORY: inspect every supplied source before declaring an artifact missing.
+17. Classify actual artifact contents. Markdown may be requirements, not code.
+18. If implementation/code is requested but no code/repository/schema exists, do not fabricate production code; state exact missing artifacts and still produce grounded requirements analysis, plan, tests and traceability.
+19. For requirements sources, preserve all confirmed rules and generate complete Markdown outputs where useful: IMPROVED_REQUIREMENTS.md, ISSUES_AND_GAPS.md, IMPLEMENTATION_PLAN.md, TRACEABILITY_MATRIX.md and README_EXECUTION.md.
+20. Return expected_execution_improvements using projected/expected language.
+21. When the supplied context is a requirements/specification or document that benefits from a stronger execution artifact, return generated_outputs with complete substantive Markdown files. Prefer IMPROVED_REQUIREMENTS.md, ISSUES_AND_GAPS.md, IMPLEMENTATION_PLAN.md, TRACEABILITY_MATRIX.md and README_EXECUTION.md. Ground every substantive change in the supplied sources; label assumptions and missing implementation artifacts. Do not return empty shells or generic placeholders when the source supports detail.
+22. generated_outputs are authored by PQA from supplied material. Include source identifiers where useful. Do not invent signatures; the application adds authoring and integrity/signature metadata after generation.
+
 Rubric version: ${rubricVersion}
 Scoring profile: ${profile}
 Intended use: ${intendedUse}

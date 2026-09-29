@@ -13,8 +13,9 @@ test('community browser flags any suspicious finding and no longer offers contin
 test('community upload requires server security scan before context insertion',()=>{
   const app=fs.readFileSync(new URL('../public/app.js',import.meta.url),'utf8');
   const scanPos=app.indexOf("fetch('/api/security-file-scan'");
-  const contextPos=app.indexOf("$('context').value=[prior");
-  assert.ok(scanPos>=0);assert.ok(contextPos>scanPos);
+  const addPos=app.indexOf('communityFiles.push(item)');
+  assert.ok(scanPos>=0);assert.ok(addPos>scanPos);
+  assert.match(app,/serializeCommunityFiles\(communityFiles\)/);
 });
 
 test('all analysis paths enforce central security preflight',()=>{

@@ -23,7 +23,7 @@
     </nav>
     <div class="sidebar-meta">
       <span class="status-dot"></span><span>Engine ready</span>
-      <small>PQA v1.11.0</small>
+      <small>PQA v1.12.0</small>
       <small>Benchmark v4.1</small>
     </div>
   </aside>
@@ -47,20 +47,20 @@
 
     <main>
       <section id="benchmark" class="release-strip">
-        <div><span>ENGINE</span><b>v1.11.0</b></div>
+        <div><span>ENGINE</span><b>v1.12.0</b></div>
         <div><span>BENCHMARK</span><b>v4.1 · 300 cases</b></div>
         <div><span>RISK MODEL</span><b>Evidence-tiered v3</b></div>
         <div><span>MODE</span><b>Prompt-first · repo optional</b></div>
       </section>
 
-      <section class="metric-grid" aria-label="Reliability overview">
+      <section id="communityOverview" class="metric-grid is-hidden" aria-label="Reliability overview">
         <article class="metric-card"><div><span>QUALITY SCORE</span><b id="scoreCard">—</b></div><small id="scoreCardSub">No analysis yet</small></article>
         <article class="metric-card"><div><span>HALLUCINATION RISK</span><b id="riskCard">—</b></div><small id="riskCardSub">Awaiting evaluation</small></article>
         <article class="metric-card"><div><span>EVIDENCE STRENGTH</span><b id="confidenceCard">—</b></div><small id="confidenceCardSub">Structural evidence coverage</small></article>
         <article class="metric-card"><div><span>LOCAL TREND</span><b id="trendValue">—</b></div><small id="trendSub">Recent browser analyses</small></article>
       </section>
 
-      <section id="efficiencyWallet" class="surface efficiency-wallet">
+      <section id="efficiencyWallet" class="surface efficiency-wallet is-hidden">
         <div class="wallet-head"><div><p class="eyebrow">ESTIMATED EFFICIENCY WALLET</p><h2>Value unlocked by better instructions</h2></div><span class="badge neutral">PQA Savings Model v1.0</span></div>
         <div class="wallet-grid">
           <div class="wallet-primary"><span>ESTIMATED TOKENS SAVED</span><b id="walletTokens">0</b><small id="walletPrompts">0 improvements generated</small></div>
@@ -72,8 +72,8 @@
         <p id="walletNote" class="privacy">Savings are estimates based on instruction quality, expected retries, task complexity and a configurable token-price profile. They are not guaranteed billing reductions.</p>
       </section>
 
-      <section class="trend-panel surface">
-        <div class="section-title"><div><p class="eyebrow">RELIABILITY TREND</p><h2>Recent prompt quality</h2></div><span id="trendCount" class="mono muted">0 analyses</span></div>
+      <section id="communityTrendPanel" class="trend-panel surface is-hidden">
+        <div class="section-title"><div><p class="eyebrow">RELIABILITY TREND</p><h2>Recent prompt quality</h2></div><span id="trendCount" class="mono muted">No analyses yet</span></div>
         <div class="trend-chart-wrap">
           <svg id="trendChart" class="trend-chart" viewBox="0 0 800 150" preserveAspectRatio="none" role="img" aria-label="Recent prompt quality trend">
             <line x1="0" y1="30" x2="800" y2="30" class="gridline"/><line x1="0" y1="75" x2="800" y2="75" class="gridline"/><line x1="0" y1="120" x2="800" y2="120" class="gridline"/>
@@ -90,14 +90,14 @@
           <label>Use case<select id="useCase"><option>General</option><option>RAG / Document Q&A</option><option>Customer Support</option><option>Coding / Software Development</option><option>Research</option><option>Data Analysis</option><option>Agent / Tool Use</option><option>Structured Extraction</option></select></label>
           <label>Prompt<textarea id="prompt" maxlength="30000" placeholder="Example: Look at this API and fix why it is slow. Don't break anything. Give me the files I need to change."></textarea></label>
           <label>Optional evidence / context<textarea id="context" class="small" maxlength="60000" placeholder="Selected logs, requirements, code excerpt, document text, acceptance criteria..."></textarea></label>
-          <div class="community-file-upload"><div class="subhead"><div><h3>Limited file context</h3><span>1 text file · 256 KB max</span></div><span class="badge neutral">Community</span></div><input id="communityFile" type="file" hidden accept=".txt,.md,.markdown,.json,.csv,.yaml,.yml,.js,.ts,.py,.html,.htm,.xml,.log"><button id="pickCommunityFile" class="dropzone" type="button"><b>Upload one text file</b><span>Scanned locally and by the central PQA security control plane before its text is added to context.</span><small>.txt .md .json .csv .yaml .js .ts .py .html .xml .log</small></button><div id="communityFileStatus" class="file-status muted">No file selected.</div></div>
+          <div class="community-file-upload"><div class="subhead"><div><h3>Scanned project files</h3><span>Up to 5 text/code files · every file must pass PQA Guard</span></div><span class="badge neutral">Community</span></div><input id="communityFile" type="file" multiple hidden accept=".txt,.md,.markdown,.json,.csv,.yaml,.yml,.js,.ts,.py,.html,.htm,.xml,.log"><button id="pickCommunityFile" class="dropzone" type="button"><b>Add or replace project files</b><span>Every file is scanned locally and by the central PQA security control plane before it can become analysis context. Re-selecting a file with the same name replaces it.</span><small>.txt .md .json .csv .yaml .js .ts .py .html .xml .log</small></button><div id="communityFileList" class="doc-list"><span class="muted">No files selected.</span></div><div id="communityFileStatus" class="file-status muted">No file selected.</div></div>
           <section class="guard-panel" id="guardPanel"><div class="subhead"><div><h3>PQA Guard Community</h3><span>pre-execution input scan</span></div><span class="severity unknown" id="guardSeverity">NOT SCANNED</span></div><p>Scans prompts and uploaded text for prompt injection, instruction override, secret-exfiltration requests, encoded payloads, credential material, and active-script indicators.</p><div id="guardFindings" class="guard-findings"><span class="muted">Run an analysis or upload a file to scan.</span></div><small>Suspicious content is never processed. The default limit is three suspicious attempts before the client network is blocked until the PQA owner clears it; the owner can configure this limit. PQA Guard is a pre-execution defense layer, not antivirus or a malware sandbox.</small></section>
           <label class="check"><input id="current" type="checkbox"> Requires current / time-sensitive facts</label>
           <div class="actionrow"><button id="analyze" class="button primary">Analyze instruction</button><button id="cancel" class="button ghost" disabled>Cancel</button></div>
           <p class="privacy">Prompt/context required for refresh recovery is stored locally in this browser. The application does not persist it on the server. If Gemini is enabled, evaluation content is sent to the configured Gemini endpoint.</p>
         </div>
 
-        <div class="surface result-panel">
+        <div class="surface result-panel is-hidden" id="communityResultPanel">
           <div class="result-header">
             <div><p class="eyebrow">RELIABILITY ASSESSMENT</p><h2>Instruction quality</h2></div>
             <span id="severityBadge" class="severity unknown">NOT EVALUATED</span>
@@ -141,6 +141,7 @@
 </div>
 </details>
 </div>
+          <section id="executionReadinessPanel" class="subsurface is-hidden"><div class="subhead"><div><h3>Execution readiness</h3><span>artifact-aware implementation assessment</span></div><span class="badge neutral" id="executionReadinessStatus">—</span></div><div class="metric-grid"><div><span>Requirements sufficiency</span><b id="execRequirementsScore">—</b></div><div><span>Implementation context</span><b id="execImplementationScore">—</b></div><div><span>Artifact grounding</span><b id="execGroundingScore">—</b></div><div><span>Execution readiness</span><b id="execReadinessScore">—</b></div></div><p id="executionNotice" class="privacy"></p><div id="executionMissing" class="notice-list"></div><div class="subhead"><h4>Expected improvements from using the recommended prompt</h4><span>projected, not guaranteed</span></div><ul id="executionImprovements" class="dense-list"></ul><div class="subhead"><h4>Generated execution files</h4><span>downloadable · authored · integrity metadata</span></div><div id="generatedOutputFiles" class="generated-files"><span class="muted">No generated files for this analysis.</span></div><button id="downloadExecutionReadme" class="button ghost compact" type="button">Download README_EXECUTION.md</button></section>
           <div id="dimensions" class="dimensions"></div>
 
           <div class="two-col-blocks">
@@ -155,21 +156,21 @@
         </div>
       </section>
 
-      <section class="surface improved-panel">
+      <section id="communityImprovedPanel" class="surface improved-panel is-hidden">
         <div class="section-title"><div><p class="eyebrow">REMEDIATION</p><h2>Recommended instruction</h2></div><button id="reanalyze" class="button ghost compact" disabled>Re-analyze</button></div>
         <textarea id="improved" readonly placeholder="The recommended prompt will appear here when Gemini is configured."></textarea>
         <p id="disclaimer" class="muted"></p>
       </section>
 
-      <section class="surface execution-panel">
+      <section id="communityExecutionPanel" class="surface execution-panel is-hidden">
         <div class="section-title"><div><p class="eyebrow">EXECUTION</p><h2>Analysis lifecycle</h2></div><strong id="stage">Ready</strong></div>
         <div class="progresswrap"><div class="progress"><i id="progressBar"></i></div><small id="progressText">0%</small></div>
         <div class="execution-metrics">
-          <span>Elapsed <b id="elapsed">0.0s</b></span><span>ETA <b id="eta">—</b></span><span>Request <b id="requestId">—</b></span><span>State <b id="dbState">Ready</b></span><span>Attempts <b id="attempts">0/3</b></span>
+          <span>Elapsed <b id="elapsed">—</b></span><span>ETA <b id="eta">—</b></span><span>Request <b id="requestId">—</b></span><span>State <b id="dbState">Ready</b></span><span>Attempts <b id="attempts">—</b></span>
         </div>
       </section>
 
-      <section class="audit-grid">
+      <section id="communityAuditGrid" class="audit-grid is-hidden">
         <div class="surface">
           <div class="section-title"><div><p class="eyebrow">AUDITABILITY</p><h2>Evaluation provenance</h2></div><span class="badge success">TRACEABLE</span></div>
           <dl class="audit-list">
@@ -200,7 +201,7 @@
       </section>
     </main>
 
-    <footer>PQA v1.11.0 · Benchmark v4.1 · Prompt-level risk indicators are engineering signals, not guarantees of model behavior.</footer>
+    <footer>PQA v1.12.0 · Benchmark v4.1 · Prompt-level risk indicators are engineering signals, not guarantees of model behavior.</footer>
   </div>
 </div>
 <script type="module" src="/app.js?v=1.9.1"></script>

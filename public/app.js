@@ -7,9 +7,25 @@ import {scanText,inspectFile,mergeScan} from './guard.js';
 function getCommunityClientId(){let id=localStorage.getItem('pqa_community_client_id');if(!id){id=(crypto.randomUUID?.()||`${Date.now()}-${Math.random()}`);localStorage.setItem('pqa_community_client_id',id);}return id;}
 const trf=(key,vars={})=>Object.entries(vars).reduce((out,[k,v])=>out.replaceAll(`{${k}}`,String(v??'')),tr(key));
 const $ = id => document.getElementById(id);
-let communityFileScan=null;
-function renderGuard(promptText=''){const promptScan=scanText(promptText||$('prompt')?.value||''),combined=mergeScan(promptScan,communityFileScan);const sev=$('guardSeverity'),host=$('guardFindings');if(sev){sev.textContent=combined.severity==='clear'?tr('CLEAR'):tr(combined.severity.toUpperCase());sev.className=`severity ${combined.severity==='clear'?'low':combined.severity}`;}if(host)host.innerHTML=combined.findings.length?combined.findings.map(f=>`<div class="guard-finding"><b>${f.severity.toUpperCase()}</b><span>${tr(f.label)}</span></div>`).join(''):`<span class="guard-clear">${tr('No community scanner indicators detected.')}</span>`;return combined;}
-async function handleCommunityFile(file){const status=$('communityFileStatus');if(!file)return;status.textContent=tr('Scanning file…');try{const result=await inspectFile(file);communityFileScan=result;if(!result.allowed){try{await fetch('/api/security-file-scan',{method:'POST',headers:{'content-type':'application/json','x-pqa-client-id':getCommunityClientId()},body:JSON.stringify({prompt:$('prompt')?.value||'',ui_language:getLanguage(),file:{name:result.name||file.name,size:result.size||file.size,type:file.type||'application/octet-stream',text:result.text||''}})});}catch{}status.textContent=`${tr('Blocked')}: ${tr(result.findings?.[0]?.label||'file not allowed')}`;renderGuard();return;}const rr=await fetch('/api/security-file-scan',{method:'POST',headers:{'content-type':'application/json','x-pqa-client-id':getCommunityClientId()},body:JSON.stringify({prompt:$('prompt')?.value||'',ui_language:document.documentElement.lang||'en',file:{name:result.name,size:result.size,type:file.type||'text/plain',text:result.text}})});let sec={};try{sec=await rr.json()}catch{}if(!rr.ok||sec.safe!==true){communityFileScan={...result,allowed:false,findings:sec?.security?.findings||result.findings||[]};status.textContent=`${tr('Blocked')}: ${tr(sec.detail||sec.error||'suspicious content detected')}`;renderGuard();return;}const prior=$('context').value.trim();$('context').value=[prior,`--- Community file: ${result.name} ---`,result.text].filter(Boolean).join('\n\n').slice(0,60000);status.textContent=`${result.name} · ${(result.size/1024).toFixed(1)} KB · ${tr('scanned')} · ${tr('clear')}`;renderGuard();}catch(e){communityFileScan=null;status.textContent=`${tr('File scan failed')}: ${tr('The file was not processed because the security scan could not be completed.')}`;renderGuard();}}
+let communityFiles=[];
+let communityReplaceIndex=null;
+const COMMUNITY_MAX_FILES=5, COMMUNITY_MAX_TOTAL_CHARS=80000;
+function sourceId(i){return `DOC${i+1}`;}
+function safeDocName(name='document.txt'){return String(name).replace(/[^\w.\- ()]/g,'_').slice(0,120);}
+function serializeCommunityFiles(files){return files.map((d,i)=>`<<<PQA_SOURCE id="${sourceId(i)}" name="${safeDocName(d.name)}">>>\n${d.text}\n<<<END_PQA_SOURCE>>>`).join('\n\n');}
+function combinedFileScan(){return communityFiles.reduce((acc,f)=>mergeScan(acc,f.scan),null);}
+function renderGuard(promptText=''){const promptScan=scanText(promptText||$('prompt')?.value||''),combined=mergeScan(promptScan,combinedFileScan());const sev=$('guardSeverity'),host=$('guardFindings');if(sev){sev.textContent=combined.severity==='clear'?tr('CLEAR'):tr(combined.severity.toUpperCase());sev.className=`severity ${combined.severity==='clear'?'low':combined.severity}`;}if(host)host.innerHTML=combined.findings.length?combined.findings.map(f=>`<div class="guard-finding"><b>${f.severity.toUpperCase()}</b><span>${tr(f.label)}</span></div>`).join(''):`<span class="guard-clear">${tr('No community scanner indicators detected.')}</span>`;return combined;}
+function renderCommunityFiles(){
+  const host=$('communityFileList'),status=$('communityFileStatus');if(!host)return;
+  const total=communityFiles.reduce((a,x)=>a+x.text.length,0);
+  host.innerHTML=communityFiles.length?communityFiles.map((f,i)=>`<div class="doc-row"><span><b>${esc(sourceId(i))}</b> ${esc(f.name)}</span><small>${(f.size/1024).toFixed(1)} KB · ${f.text.length.toLocaleString()} ${tr('chars')} · ${tr('scanned')}</small><span class="doc-actions"><button type="button" class="button ghost compact" data-community-replace="${i}">${tr('Replace')}</button><button type="button" class="button ghost compact" data-community-remove="${i}" aria-label="${tr('Remove')} ${esc(f.name)}">×</button></span></div>`).join(''):`<span class="muted">${tr('No files selected.')}</span>`;
+  host.querySelectorAll('[data-community-remove]').forEach(b=>b.addEventListener('click',()=>{communityFiles.splice(Number(b.dataset.communityRemove),1);renderCommunityFiles();renderGuard();}));
+  host.querySelectorAll('[data-community-replace]').forEach(b=>b.addEventListener('click',()=>{communityReplaceIndex=Number(b.dataset.communityReplace);$('communityFile')?.click();}));
+  if(status)status.textContent=communityFiles.length?`${communityFiles.length}/${COMMUNITY_MAX_FILES} ${tr('files')} · ${total.toLocaleString()} ${tr('chars')} · ${tr('scanned')}`:tr('No file selected.');
+}
+async function scanAndAddCommunityFile(file,replaceIndex=null){const status=$('communityFileStatus');if(!file)return;if(replaceIndex==null&&communityFiles.length>=COMMUNITY_MAX_FILES){alert(tr('Community file limit reached. Remove a file before adding another.'));return;}status.textContent=tr('Scanning file…');try{const result=await inspectFile(file);if(!result.allowed){try{await fetch('/api/security-file-scan',{method:'POST',headers:{'content-type':'application/json','x-pqa-client-id':getCommunityClientId()},body:JSON.stringify({prompt:$('prompt')?.value||'',ui_language:getLanguage(),file:{name:result.name||file.name,size:result.size||file.size,type:file.type||'application/octet-stream',text:result.text||''}})});}catch{}status.textContent=`${tr('Blocked')}: ${tr(result.findings?.[0]?.label||'file not allowed')}`;renderGuard();return;}const rr=await fetch('/api/security-file-scan',{method:'POST',headers:{'content-type':'application/json','x-pqa-client-id':getCommunityClientId()},body:JSON.stringify({prompt:$('prompt')?.value||'',ui_language:getLanguage(),file:{name:result.name,size:result.size,type:file.type||'text/plain',text:result.text}})});let sec={};try{sec=await rr.json()}catch{}if(!rr.ok||sec.safe!==true){status.textContent=`${tr('Blocked')}: ${tr(sec.detail||sec.error||'suspicious content detected')}`;renderGuard();return;}const duplicate=communityFiles.findIndex(x=>x.name===result.name);const target=replaceIndex!=null?replaceIndex:duplicate;const projected=communityFiles.reduce((a,x,idx)=>a+(idx===target?0:x.text.length),0)+result.text.length;if(projected>COMMUNITY_MAX_TOTAL_CHARS){status.textContent=tr('Combined file context is too large. Remove or replace a file.');return;}const item={name:result.name,size:result.size,type:file.type||'text/plain',text:result.text,scan:result};if(target>=0)communityFiles.splice(target,1,item);else communityFiles.push(item);renderCommunityFiles();renderGuard();}catch(e){status.textContent=`${tr('File scan failed')}: ${tr('The file was not processed because the security scan could not be completed.')}`;renderGuard();}}
+async function handleCommunityFiles(files){const incoming=[...files];if(communityReplaceIndex!=null){const target=communityReplaceIndex;communityReplaceIndex=null;if(incoming[0])await scanAndAddCommunityFile(incoming[0],target);renderCommunityFiles();return;}for(const file of incoming){if(communityFiles.length>=COMMUNITY_MAX_FILES)break;await scanAndAddCommunityFile(file);}renderCommunityFiles();}
+
 
 installLanguageUI();
 const btn = $('analyze');
@@ -30,7 +46,7 @@ function renderWallet(){
 function maybeRecordSavings(tx){
  const r=tx?.final_result; if(!r?.improved_prompt||!tx?.payload?.prompt)return;
  const est=estimateSavings({prompt:tx.payload.prompt,improvedPrompt:r.improved_prompt,score:r.overall_score,risk:r.hallucination_risk,intendedUse:tx.payload.intendedUse,reasonCodes:r.reason_codes||[],pricing:loadPricing()});
- if(recordSavings(tx.id,{use_case:tx.payload.intendedUse||'General',risk:r.hallucination_risk,score:r.overall_score},est))renderWallet();
+ if(recordSavings(tx.id,{use_case:tx.payload.intendedUse||'General',risk:r.hallucination_risk,score:r.overall_score},est)){renderWallet();$('efficiencyWallet')?.classList.remove('is-hidden');}
 }
 
 function list(el, items, empty) {
@@ -39,6 +55,35 @@ function list(el, items, empty) {
 }
 function fmtMs(ms) { if (ms == null || !Number.isFinite(Number(ms))) return '—'; const n=Number(ms); return n<1000?`${Math.round(n)}ms`:`${(n/1000).toFixed(1)}s`; }
 function esc(s='') { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function sha256Hex(text){const data=new TextEncoder().encode(String(text));const hash=await crypto.subtle.digest('SHA-256',data);return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,'0')).join('');}
+async function signedArtifactContent(artifact,analysisId,receipt){
+  const body=String(artifact?.content||'');let meta=null;
+  try{const r=await fetch('/api/artifact-sign',{method:'POST',headers:{'content-type':'application/json','x-pqa-client-id':getCommunityClientId()},body:JSON.stringify({filename:artifact.filename,analysis_id:analysisId,content:body,receipt})});meta=await r.json().catch(()=>null);if(!r.ok)meta=null;}catch{}
+  if(!meta)meta={author:'Prompt Quality Analyzer (PQA)',authored_at:new Date().toISOString(),sha256:await sha256Hex(body),algorithm:'SHA-256 integrity digest',signature:'unavailable',canonical_version:'pqa-artifact-v1'};
+  const note=meta.signature==='unavailable'?tr('Cryptographic signature unavailable: configure the server artifact signing key in production. The SHA-256 digest still supports integrity checking.'):tr('The signature covers the canonical artifact metadata and SHA-256 digest of the content above.');
+  const block=`
+
+---
+
+## ${tr('PQA Artifact Metadata')}
+
+- ${tr('Artifact author')}: ${meta.author}
+- ${tr('Generated at')}: ${meta.authored_at}
+- ${tr('Analysis ID')}: ${analysisId||'n/a'}
+- ${tr('Integrity SHA-256')}: \`${meta.sha256}\`
+- ${tr('Signature algorithm')}: ${meta.algorithm}
+- ${tr('Signature')}: \`${meta.signature}\`
+- ${tr('Canonical version')}: ${meta.canonical_version}
+- ${tr('Verification endpoint')}: /api/artifact-verify
+
+> ${note}
+`;
+  return body.replace(/\s+$/,'')+block;
+}
+function downloadText(name,text){const blob=new Blob([text],{type:'text/markdown;charset=utf-8'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),800);}
+async function downloadGeneratedArtifact(index){const tx=activeId?await getTransaction(activeId):null;const r=tx?.final_result||tx?.deterministic_result;const a=r?.generated_outputs?.[index];if(!a)return;downloadText(a.filename,await signedArtifactContent(a,tx?.id||activeId,r?.artifact_manifest_receipt));}
+function renderExecutionReadiness(r){const e=r?.execution_readiness,p=$('executionReadinessPanel');if(!p)return;p.classList.toggle('is-hidden',!e);if(!e)return;$('executionReadinessStatus').textContent=tr(String(e.status||'unknown').replaceAll('_',' '));$('execRequirementsScore').textContent=Number.isFinite(Number(e.scores?.requirements_sufficiency))?`${e.scores.requirements_sufficiency}/100`:'—';$('execImplementationScore').textContent=Number.isFinite(Number(e.scores?.implementation_context_sufficiency))?`${e.scores.implementation_context_sufficiency}/100`:'—';$('execGroundingScore').textContent=Number.isFinite(Number(e.scores?.artifact_grounding))?`${e.scores.artifact_grounding}/100`:'—';$('execReadinessScore').textContent=Number.isFinite(Number(e.scores?.execution_readiness))?`${e.scores.execution_readiness}/100`:'—';$('executionNotice').textContent=tr(e.notice||'');const missing=e.missing_artifacts||[];$('executionMissing').innerHTML=missing.length?`<div class="callout warning"><b>${tr('Missing implementation artifacts')}</b><ul>${missing.map(x=>`<li>${esc(tr(x))}</li>`).join('')}</ul></div>`:'';const imps=r.expected_execution_improvements||e.expected_improvements||[];list($('executionImprovements'),imps,tr('No projected improvements available.'));const outs=r.generated_outputs||[];$('generatedOutputFiles').innerHTML=outs.length?outs.map((a,i)=>`<div class="generated-file"><span><b>${esc(a.filename)}</b><small>${esc(tr(a.purpose||''))}</small></span><button class="button ghost compact" type="button" data-output-file="${i}">${esc(tr('Download'))}</button></div>`).join(''):`<span class="muted">${tr('No generated files for this analysis.')}</span>`;$('generatedOutputFiles').querySelectorAll('[data-output-file]').forEach(b=>b.addEventListener('click',()=>downloadGeneratedArtifact(Number(b.dataset.outputFile))));$('downloadExecutionReadme').disabled=!outs.some(x=>x.filename==='README_EXECUTION.md');}
 function stateLabel(s='') { return s.replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase()); }
 
 function pct(v) { const n=Number(v); return Number.isFinite(n) ? `${Math.round(n*100)}%` : '—'; }
@@ -85,6 +130,7 @@ function renderResult(r) {
   $('riskCard').textContent=risk;
   $('riskCard').className=`risk-${riskClass(r.hallucination_risk)}`;
   renderHallucinationAnalysis(r);
+  renderExecutionReadiness(r);
   $('scoreCardSub').textContent=r.score_range?.length===2 ? `Expected range ${r.score_range[0]}–${r.score_range[1]}` : 'Current instruction';
   $('riskCardSub').textContent=Number.isFinite(Number(r.hallucination_analysis?.risk_index))?`${tr('Risk index')} ${Math.round(Number(r.hallucination_analysis.risk_index))}/100 · ${(r.risk_indicators||[]).length} ${tr('drivers')}`:`${(r.risk_indicators||[]).length} detected risk indicator${(r.risk_indicators||[]).length===1?'':'s'}`;
   const evidenceStrength=r.analysis_evidence_strength||{};
@@ -120,6 +166,7 @@ function renderEvents(tx) {
 
 async function renderTransaction(tx) {
   if (!tx) return;
+  for (const id of ['communityOverview','communityTrendPanel','communityResultPanel','communityImprovedPanel','communityExecutionPanel','communityAuditGrid']) $(id)?.classList.remove('is-hidden');
   lastRenderedUpdate=tx.updated_at || Date.now();
   const p=await getEstimatedProgress(tx);
   $('requestId').textContent=tx.id.slice(0,8);
@@ -171,7 +218,7 @@ function startPolling() {
   clearInterval(pollTimer); clearInterval(elapsedTimer);
   pollTimer=setInterval(()=>pollActive().catch(console.error),500);
   elapsedTimer=setInterval(async()=>{
-    if (!activeId) { $('elapsed').textContent='0.0s'; return; }
+    if (!activeId) { $('elapsed').textContent='—'; return; }
     const tx=await getTransaction(activeId);
     if (!tx?.started_at) return;
     const end=tx.completed_at || Date.now();
@@ -182,10 +229,12 @@ function startPolling() {
 async function startAnalysis(promptOverride) {
   const prompt=promptOverride ?? $('prompt').value;
   if (!prompt.trim()) return alert('Paste a prompt first.');
+  const fileContext=serializeCommunityFiles(communityFiles);
+  const context=[$('context').value.trim(),fileContext].filter(Boolean).join('\n\n');
   const guard=renderGuard(prompt);
-  if(guard.findings?.length){try{const rr=await fetch('/api/security-preflight',{method:'POST',headers:{'content-type':'application/json','x-pqa-client-id':getCommunityClientId()},body:JSON.stringify({prompt,context:$('context').value,ui_language:getLanguage()})});const j=await rr.json().catch(()=>({}));const rem=j?.security?.remaining_before_block??j?.remaining_before_block;alert(trf?trf('PQA Guard detected suspicious input. The request will not be processed. Remaining attempts before network block: {count}',{count:rem??'—'}):tr('PQA Guard detected suspicious input. The request will not be processed.'));}catch{alert(tr('PQA Guard detected suspicious input. The request will not be processed.'));}return;}
+  if(guard.findings?.length){try{const rr=await fetch('/api/security-preflight',{method:'POST',headers:{'content-type':'application/json','x-pqa-client-id':getCommunityClientId()},body:JSON.stringify({prompt,context,ui_language:getLanguage()})});const j=await rr.json().catch(()=>({}));const rem=j?.security?.remaining_before_block??j?.remaining_before_block;alert(trf?trf('PQA Guard detected suspicious input. The request will not be processed. Remaining attempts before network block: {count}',{count:rem??'—'}):tr('PQA Guard detected suspicious input. The request will not be processed.'));}catch{alert(tr('PQA Guard detected suspicious input. The request will not be processed.'));}return;}
   btn.disabled=true; btn.textContent='Queued…';
-  const payload={ prompt, context:$('context').value, intendedUse:$('useCase').value, requiresCurrentFacts:$('current').checked, ui_language:getLanguage(), ui_locale:getLocale(), response_language_instruction:languageInstruction() };
+  const payload={ prompt, context, intendedUse:$('useCase').value, requiresCurrentFacts:$('current').checked, ui_language:getLanguage(), ui_locale:getLocale(), response_language_instruction:languageInstruction(), document_meta:communityFiles.map((d,i)=>({source_id:sourceId(i),name:d.name,chars:d.text.length,type:d.type})) };
   const tx=await createAnalysisTransaction(payload);
   activeId=tx.id;
   await renderTransaction(tx); await refreshHistory();
@@ -194,8 +243,9 @@ async function startAnalysis(promptOverride) {
   void executeTransaction(tx.id);
 }
 
-$('pickCommunityFile')?.addEventListener('click',()=>$('communityFile')?.click());$('communityFile')?.addEventListener('change',e=>handleCommunityFile(e.target.files?.[0]));$('prompt')?.addEventListener('input',()=>renderGuard());renderGuard();
+$('pickCommunityFile')?.addEventListener('click',()=>$('communityFile')?.click());$('communityFile')?.addEventListener('change',async e=>{await handleCommunityFiles(e.target.files||[]);e.target.value='';});$('prompt')?.addEventListener('input',()=>renderGuard());renderCommunityFiles();renderGuard();
 btn.addEventListener('click',()=>startAnalysis().catch(e=>alert(e.message)));
+$('downloadExecutionReadme')?.addEventListener('click',async()=>{const tx=activeId?await getTransaction(activeId):null;const outs=(tx?.final_result||tx?.deterministic_result)?.generated_outputs||[];const i=outs.findIndex(x=>x.filename==='README_EXECUTION.md');if(i>=0)downloadGeneratedArtifact(i);});
 $('reanalyze').addEventListener('click',()=>{ $('prompt').value=$('improved').value; startAnalysis($('improved').value).catch(e=>alert(e.message)); });
 $('cancel').addEventListener('click',async()=>{ if(activeId){ await cancelTransaction(activeId); await pollActive(); }});
 $('clearLog').addEventListener('click',async()=>{ if(!activeId)return; const tx=await getTransaction(activeId); if(tx){ tx.events=[]; const { putTransaction }=await import('./idb.js'); await putTransaction(tx); await pollActive(); }});
@@ -211,5 +261,4 @@ $('testJudge').addEventListener('click',async()=>{ const b=$('testJudge'); b.dis
 subscribeTransactionUpdates(async msg=>{ if(msg?.id===activeId) await pollActive(); await refreshHistory(); });
 startPolling();
 await resumePendingTransactions();
-const recent=await listTransactions(1); if(recent[0]) { activeId=recent[0].id; await renderTransaction(recent[0]); }
 await refreshHistory();
