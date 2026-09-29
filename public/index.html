@@ -23,7 +23,7 @@
     </nav>
     <div class="sidebar-meta">
       <span class="status-dot"></span><span>Engine ready</span>
-      <small>PQA v1.10.0</small>
+      <small>PQA v1.11.0</small>
       <small>Benchmark v4.1</small>
     </div>
   </aside>
@@ -47,7 +47,7 @@
 
     <main>
       <section id="benchmark" class="release-strip">
-        <div><span>ENGINE</span><b>v1.10.0</b></div>
+        <div><span>ENGINE</span><b>v1.11.0</b></div>
         <div><span>BENCHMARK</span><b>v4.1 · 300 cases</b></div>
         <div><span>RISK MODEL</span><b>Evidence-tiered v3</b></div>
         <div><span>MODE</span><b>Prompt-first · repo optional</b></div>
@@ -90,8 +90,8 @@
           <label>Use case<select id="useCase"><option>General</option><option>RAG / Document Q&A</option><option>Customer Support</option><option>Coding / Software Development</option><option>Research</option><option>Data Analysis</option><option>Agent / Tool Use</option><option>Structured Extraction</option></select></label>
           <label>Prompt<textarea id="prompt" maxlength="30000" placeholder="Example: Look at this API and fix why it is slow. Don't break anything. Give me the files I need to change."></textarea></label>
           <label>Optional evidence / context<textarea id="context" class="small" maxlength="60000" placeholder="Selected logs, requirements, code excerpt, document text, acceptance criteria..."></textarea></label>
-          <div class="community-file-upload"><div class="subhead"><div><h3>Limited file context</h3><span>1 text file · 256 KB max</span></div><span class="badge neutral">Community</span></div><input id="communityFile" type="file" hidden accept=".txt,.md,.markdown,.json,.csv,.yaml,.yml,.js,.ts,.py,.html,.htm,.xml,.log"><button id="pickCommunityFile" class="dropzone" type="button"><b>Upload one text file</b><span>Scanned locally before its text is added to context.</span><small>.txt .md .json .csv .yaml .js .ts .py .html .xml .log</small></button><div id="communityFileStatus" class="file-status muted">No file selected.</div></div>
-          <section class="guard-panel" id="guardPanel"><div class="subhead"><div><h3>PQA Guard Community</h3><span>pre-execution input scan</span></div><span class="severity unknown" id="guardSeverity">NOT SCANNED</span></div><p>Scans prompts and uploaded text for prompt injection, instruction override, secret-exfiltration requests, encoded payloads, credential material, and active-script indicators.</p><div id="guardFindings" class="guard-findings"><span class="muted">Run an analysis or upload a file to scan.</span></div><small>Heuristic defense layer only. It is not antivirus, a malware sandbox, or a guarantee that content is safe.</small></section>
+          <div class="community-file-upload"><div class="subhead"><div><h3>Limited file context</h3><span>1 text file · 256 KB max</span></div><span class="badge neutral">Community</span></div><input id="communityFile" type="file" hidden accept=".txt,.md,.markdown,.json,.csv,.yaml,.yml,.js,.ts,.py,.html,.htm,.xml,.log"><button id="pickCommunityFile" class="dropzone" type="button"><b>Upload one text file</b><span>Scanned locally and by the central PQA security control plane before its text is added to context.</span><small>.txt .md .json .csv .yaml .js .ts .py .html .xml .log</small></button><div id="communityFileStatus" class="file-status muted">No file selected.</div></div>
+          <section class="guard-panel" id="guardPanel"><div class="subhead"><div><h3>PQA Guard Community</h3><span>pre-execution input scan</span></div><span class="severity unknown" id="guardSeverity">NOT SCANNED</span></div><p>Scans prompts and uploaded text for prompt injection, instruction override, secret-exfiltration requests, encoded payloads, credential material, and active-script indicators.</p><div id="guardFindings" class="guard-findings"><span class="muted">Run an analysis or upload a file to scan.</span></div><small>Suspicious content is never processed. The default limit is three suspicious attempts before the client network is blocked until the PQA owner clears it; the owner can configure this limit. PQA Guard is a pre-execution defense layer, not antivirus or a malware sandbox.</small></section>
           <label class="check"><input id="current" type="checkbox"> Requires current / time-sensitive facts</label>
           <div class="actionrow"><button id="analyze" class="button primary">Analyze instruction</button><button id="cancel" class="button ghost" disabled>Cancel</button></div>
           <p class="privacy">Prompt/context required for refresh recovery is stored locally in this browser. The application does not persist it on the server. If Gemini is enabled, evaluation content is sent to the configured Gemini endpoint.</p>
@@ -200,7 +200,7 @@
       </section>
     </main>
 
-    <footer>PQA v1.10.0 · Benchmark v4.1 · Prompt-level risk indicators are engineering signals, not guarantees of model behavior.</footer>
+    <footer>PQA v1.11.0 · Benchmark v4.1 · Prompt-level risk indicators are engineering signals, not guarantees of model behavior.</footer>
   </div>
 </div>
 <script type="module" src="/app.js?v=1.9.1"></script>
