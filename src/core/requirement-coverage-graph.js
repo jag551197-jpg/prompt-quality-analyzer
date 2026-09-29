@@ -1,0 +1,40 @@
+function clamp(n,a=0,b=100){return Math.max(a,Math.min(b,Math.round(Number(n)||0)));}
+function langOf(v){const s=String(v||'en').toLowerCase();return s.startsWith('pt')?'pt':s.startsWith('fr')?'fr':'en';}
+const T={
+ en:{title:'Requirement Coverage Graph',summary:'Evidence path from requirement to source code, tests, and runtime verification.',req:'Requirement',code:'Source code',test:'Test evidence',runtime:'Runtime evidence',gap:'Gap',covered:'Code evidence found',untested:'Code found; test evidence missing',missing:'Required identifier not found in supplied source',unverified:'Runtime behavior not verified by static analysis',value:['Makes requirement-to-code coverage visible instead of relying on prompt wording alone.','Shows where implementation evidence exists and where tests are still missing.','Separates static source evidence from runtime proof, reducing false confidence.','Creates a concrete review map for developers before code changes are executed.']},
+ pt:{title:'Grafo de Cobertura de Requisitos',summary:'Caminho de evidências do requisito até código-fonte, testes e verificação em runtime.',req:'Requisito',code:'Código-fonte',test:'Evidência de teste',runtime:'Evidência de runtime',gap:'Lacuna',covered:'Evidência no código encontrada',untested:'Código encontrado; falta evidência de teste',missing:'Identificador exigido não encontrado no código fornecido',unverified:'O comportamento em runtime não foi verificado pela análise estática',value:['Torna visível a cobertura requisito→código em vez de depender apenas da redação do prompt.','Mostra onde há evidência de implementação e onde ainda faltam testes.','Separa evidência estática do código de prova em runtime, reduzindo falsa confiança.','Cria um mapa concreto de revisão para desenvolvedores antes da execução das mudanças.']},
+ fr:{title:'Graphe de couverture des exigences',summary:'Chaîne de preuves de l’exigence au code source, aux tests et à la vérification d’exécution.',req:'Exigence',code:'Code source',test:'Preuve de test',runtime:'Preuve d’exécution',gap:'Lacune',covered:'Preuve trouvée dans le code',untested:'Code trouvé ; preuve de test manquante',missing:'Identifiant requis absent du code source fourni',unverified:'Le comportement à l’exécution n’est pas vérifié par l’analyse statique',value:['Rend visible la couverture exigence→code au lieu de se fier uniquement à la formulation du prompt.','Montre où existent des preuves d’implémentation et où les tests manquent encore.','Sépare les preuves statiques du code des preuves d’exécution afin de réduire la fausse confiance.','Crée une carte de revue concrète pour les développeurs avant l’exécution des modifications.']}
+};
+
+export function buildRequirementCoverageGraph(codeAlignment={},uiLanguage='en'){
+ const lang=langOf(uiLanguage),t=T[lang];
+ if(!codeAlignment?.applicable)return null;
+ const matched=Array.isArray(codeAlignment.matched_identifiers)?codeAlignment.matched_identifiers:[];
+ const missing=Array.isArray(codeAlignment.missing_identifiers)?codeAlignment.missing_identifiers:[];
+ const exact=Math.max(Number(codeAlignment.exact_identifiers_checked)||0,matched.length+missing.length);
+ if(!codeAlignment.verified || exact===0){return {version:'requirement-coverage-graph-v1',available:false,title:t.title,summary:t.summary,reason:codeAlignment?.verified?'insufficient_explicit_requirements':'source_code_not_verified',metrics:{requirements:exact,code_covered:0,test_covered:0,runtime_verified:0,gaps:missing.length,code_coverage_pct:null,test_coverage_pct:null,runtime_coverage_pct:null},nodes:[],edges:[],rows:[],expected_value:t.value};}
+ const nodes=[],edges=[],rows=[];const seen=new Set();
+ const addNode=n=>{if(!seen.has(n.id)){nodes.push(n);seen.add(n.id);}};
+ let testCovered=0;
+ const limited=[...matched.map(x=>({kind:'matched',x})),...missing.map(x=>({kind:'missing',x}))].slice(0,30);
+ let idx=0;
+ for(const item of limited){idx++;const identifier=item.kind==='matched'?item.x.identifier:String(item.x);const rid=`req-${idx}`;addNode({id:rid,type:'requirement',label:identifier,status:item.kind==='matched'?'covered':'gap'});
+   if(item.kind==='missing'){const gid=`gap-${idx}`;addNode({id:gid,type:'gap',label:t.gap,status:'gap'});edges.push({from:rid,to:gid,type:'missing'});rows.push({requirement:identifier,status:'missing',code_sources:[],test_evidence:false,runtime_verified:false,message:t.missing});continue;}
+   const locs=Array.isArray(item.x.locations)&&item.x.locations.length?item.x.locations:[{source_id:item.x.source_id,source_name:item.x.source_name,line:item.x.line,is_test:Boolean(item.x.test_evidence)}];
+   const codeLocs=locs.filter(l=>!l.is_test),testLocs=locs.filter(l=>l.is_test);if(testLocs.length)testCovered++;
+   const used=(codeLocs.length?codeLocs:locs).slice(0,4);for(const [j,l] of used.entries()){const cid=`code-${idx}-${j}`;addNode({id:cid,type:'code',label:l.source_name||l.source_id||t.code,detail:Number(l.line)?`L${l.line}`:'',status:'covered'});edges.push({from:rid,to:cid,type:'implementation'});if(testLocs.length){const tl=testLocs[0],tid=`test-${idx}`;addNode({id:tid,type:'test',label:tl.source_name||t.test,detail:Number(tl.line)?`L${tl.line}`:'',status:'covered'});edges.push({from:cid,to:tid,type:'test'});const run=`runtime-${idx}`;addNode({id:run,type:'runtime',label:t.runtime,status:'unverified'});edges.push({from:tid,to:run,type:'runtime'});}else{const tid=`test-${idx}`;addNode({id:tid,type:'test',label:t.test,status:'gap'});edges.push({from:cid,to:tid,type:'missing-test'});}}
+   rows.push({requirement:identifier,status:testLocs.length?'code_and_test_evidence':'code_evidence_only',code_sources:[...new Set(locs.filter(l=>!l.is_test).map(l=>l.source_name||l.source_id))],test_sources:[...new Set(testLocs.map(l=>l.source_name||l.source_id))],test_evidence:testLocs.length>0,runtime_verified:false,message:testLocs.length?t.covered:t.untested});
+ }
+ const codeCovered=matched.length,gaps=missing.length;
+ return {version:'requirement-coverage-graph-v1',available:true,title:t.title,summary:t.summary,metrics:{requirements:exact,code_covered:codeCovered,test_covered:testCovered,runtime_verified:0,gaps,code_coverage_pct:exact?clamp(codeCovered/exact*100):null,test_coverage_pct:exact?clamp(testCovered/exact*100):null,runtime_coverage_pct:0},nodes,edges,rows,legend:{requirement:t.req,code:t.code,test:t.test,runtime:t.runtime,gap:t.gap},expected_value:t.value,limitations:t.unverified};
+}
+
+export function coverageGraphMarkdown(graph={},uiLanguage='en'){
+ const lang=langOf(uiLanguage),t=T[lang];if(!graph?.available)return '';
+ const m=graph.metrics||{};const statusTitle=lang==='pt'?'Status de cobertura':lang==='fr'?'État de couverture':'Coverage status';
+ const tableHead=lang==='pt'?'| Requisito | Código-fonte | Teste | Runtime | Status |':lang==='fr'?'| Exigence | Code source | Test | Exécution | Statut |':'| Requirement | Source code | Test | Runtime | Status |';
+ const rows=(graph.rows||[]).map(r=>`| ${String(r.requirement).replaceAll('|','\\|')} | ${(r.code_sources||[]).join(', ')||'—'} | ${r.test_evidence?'✓':'—'} | ${r.runtime_verified?'✓':'—'} | ${r.status} |`).join('\n');
+ const mermaidNodes=(graph.nodes||[]).slice(0,45).map(n=>`${n.id.replace(/-/g,'_')}["${String(n.label).replace(/["\n]/g,' ').slice(0,60)}"]`).join('\n');
+ const mermaidEdges=(graph.edges||[]).slice(0,70).map(e=>`${e.from.replace(/-/g,'_')} --> ${e.to.replace(/-/g,'_')}`).join('\n');
+ return `# ${t.title}\n\n${t.summary}\n\n## ${statusTitle}\n\n- ${t.req}: **${m.requirements??0}**\n- ${t.code}: **${m.code_covered??0}** (${m.code_coverage_pct??'—'}%)\n- ${t.test}: **${m.test_covered??0}** (${m.test_coverage_pct??'—'}%)\n- ${t.runtime}: **${m.runtime_verified??0}** (${m.runtime_coverage_pct??0}%)\n- ${t.gap}: **${m.gaps??0}**\n\n## ${lang==='pt'?'Mapa visual':lang==='fr'?'Carte visuelle':'Visual map'}\n\n\`\`\`mermaid\ngraph LR\n${mermaidNodes}\n${mermaidEdges}\n\`\`\`\n\n## ${lang==='pt'?'Matriz de evidências':lang==='fr'?'Matrice de preuves':'Evidence matrix'}\n\n${tableHead}\n|---|---|---|---|---|\n${rows}\n\n> ${graph.limitations||t.unverified}\n`;
+}
