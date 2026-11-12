@@ -1,209 +1,47 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>PQA Community — AI Instruction Reliability</title>
-  <meta name="description" content="PQA evaluates AI instructions for quality, ambiguity, unsupported assumptions and hallucination risk before execution.">
-  <link rel="stylesheet" href="/styles.css?v=1.10.0">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+<title>PQA Community — prompt checklist</title>
+<link rel="icon" href="favicon.svg">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="app-shell">
-  <aside class="sidebar">
-    <a class="brand" href="#" aria-label="PQA home">
-      <span class="brand-mark">P</span>
-      <span><b>PQA</b><small>AI Instruction Reliability</small></span>
-    </a>
-    <nav class="nav">
-      <a class="active" href="#analyzer"><span>◫</span>Analyze</a>
-      <a href="#historySection"><span>↺</span>History</a>
-      <a href="#benchmark"><span>◇</span>Benchmark</a>
-      <a href="#diagnostics"><span>⌁</span>Diagnostics</a>
-    </nav>
-    <div class="sidebar-meta">
-      <span class="status-dot"></span><span>Engine ready</span>
-      <small>PQA v1.14.0</small>
-      <small>Benchmark v4.1</small>
+<header class="top">
+  <div><b>PQA Community</b> <small id="version"></small></div>
+  <label class="lang"><span data-i18n="Language">Language</span>
+    <select id="lang"><option value="en">English</option><option value="pt">Português (Brasil)</option><option value="fr">Français</option></select>
+  </label>
+</header>
+<main>
+  <section class="card">
+    <h1 data-i18n="Check your prompt">Check your prompt</h1>
+    <p class="muted" data-i18n="intro">A free, open-source checklist of common prompt-reliability practices. Everything runs in your browser; nothing is sent anywhere.</p>
+    <label for="prompt" data-i18n="Prompt">Prompt</label>
+    <textarea id="prompt" rows="6"></textarea>
+    <label for="context" data-i18n="Material (optional)">Material (optional)</label>
+    <textarea id="context" rows="4"></textarea>
+    <button id="analyze" class="primary" data-i18n="Check prompt">Check prompt</button>
+  </section>
+  <section class="card hidden" id="result">
+    <div class="kpis">
+      <div><span data-i18n="Score">Score</span><b id="score">—</b></div>
+      <div><span data-i18n="Quality">Quality</span><b id="quality">—</b></div>
+      <div><span data-i18n="Risk">Risk</span><b id="risk">—</b></div>
     </div>
-  </aside>
-
-  <div class="main-shell">
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">DEVELOPER RELIABILITY CONTROL</p>
-        <h1>Analyze before AI executes.</h1>
-      </div>
-      <div class="header-actions">
-        <div id="languageSwitcher" class="pqa-language-switcher" aria-label="Language">
-          <button id="langEn" class="pqa-lang-button" type="button" data-pqa-lang="en" aria-label="English" title="English"><span aria-hidden="true">🇺🇸</span><b>EN</b></button>
-          <button id="langPt" class="pqa-lang-button" type="button" data-pqa-lang="pt" aria-label="Português (Brasil)" title="Português (Brasil)"><span aria-hidden="true">🇧🇷</span><b>PT</b></button>
-          <button id="langFr" class="pqa-lang-button" type="button" data-pqa-lang="fr" aria-label="Français" title="Français"><span aria-hidden="true">🇫🇷</span><b>FR</b></button>
-        </div>
-        <button id="testJudge" class="button ghost compact">Test Gemini</button>
-        <a class="button ghost compact" href="https://github.com/jag551197-jpg/prompt-quality-analyzer" target="_blank" rel="noreferrer">GitHub</a>
-      </div>
-    </header>
-
-    <main>
-      <section id="benchmark" class="release-strip">
-        <div><span>ENGINE</span><b>v1.14.0</b></div>
-        <div><span>BENCHMARK</span><b>v4.1 · 300 cases</b></div>
-        <div><span>RISK MODEL</span><b>Evidence-tiered v3</b></div>
-        <div><span>MODE</span><b>Prompt-first · repo optional</b></div>
-      </section>
-
-      <section id="communityOverview" class="metric-grid is-hidden" aria-label="Reliability overview">
-        <article class="metric-card"><div><span>QUALITY SCORE</span><b id="scoreCard">—</b></div><small id="scoreCardSub">No analysis yet</small></article>
-        <article class="metric-card"><div><span>HALLUCINATION RISK</span><b id="riskCard">—</b></div><small id="riskCardSub">Awaiting evaluation</small></article>
-        <article class="metric-card"><div><span>EVIDENCE STRENGTH</span><b id="confidenceCard">—</b></div><small id="confidenceCardSub">Structural evidence coverage</small></article>
-        <article class="metric-card"><div><span>LOCAL TREND</span><b id="trendValue">—</b></div><small id="trendSub">Recent browser analyses</small></article>
-      </section>
-
-      <section id="efficiencyWallet" class="surface efficiency-wallet is-hidden">
-        <div class="wallet-head"><div><p class="eyebrow">ESTIMATED EFFICIENCY WALLET</p><h2>Value unlocked by better instructions</h2></div><span class="badge neutral">PQA Savings Model v1.0</span></div>
-        <div class="wallet-grid">
-          <div class="wallet-primary"><span>ESTIMATED TOKENS SAVED</span><b id="walletTokens">0</b><small id="walletPrompts">0 improvements generated</small></div>
-          <div><span>AI COST AVOIDED</span><b id="walletCost">$0.00</b><small>estimated</small></div>
-          <div><span>RETRIES AVOIDED</span><b id="walletRetries">0.00</b><small>expected corrective cycles</small></div>
-          <div><span>CONFIDENCE</span><b>MODELED</b><small>not measured provider billing</small></div>
-        </div>
-        <div class="wallet-actions"><select id="walletPeriod"><option value="all">All time</option><option value="month">This month</option><option value="today">Today</option></select><button id="walletMethod" class="button ghost compact">Methodology</button><button id="walletReset" class="button ghost compact">Reset wallet</button></div>
-        <p id="walletNote" class="privacy">Savings are estimates based on instruction quality, expected retries, task complexity and a configurable token-price profile. They are not guaranteed billing reductions.</p>
-      </section>
-
-      <section id="communityTrendPanel" class="trend-panel surface is-hidden">
-        <div class="section-title"><div><p class="eyebrow">RELIABILITY TREND</p><h2>Recent prompt quality</h2></div><span id="trendCount" class="mono muted">No analyses yet</span></div>
-        <div class="trend-chart-wrap">
-          <svg id="trendChart" class="trend-chart" viewBox="0 0 800 150" preserveAspectRatio="none" role="img" aria-label="Recent prompt quality trend">
-            <line x1="0" y1="30" x2="800" y2="30" class="gridline"/><line x1="0" y1="75" x2="800" y2="75" class="gridline"/><line x1="0" y1="120" x2="800" y2="120" class="gridline"/>
-            <polyline id="trendLine" points="" class="trend-line"/>
-            <g id="trendDots"></g>
-          </svg>
-          <div id="trendEmpty" class="trend-empty">Run analyses to build a local reliability trend. No synthetic data is shown.</div>
-        </div>
-      </section>
-
-      <section id="analyzer" class="analysis-layout">
-        <div class="surface input-panel">
-          <div class="section-title"><div><p class="eyebrow">INPUT</p><h2>Developer instruction</h2></div><span class="badge neutral">Prompt-only by default</span></div>
-          <label>Use case<select id="useCase"><option>General</option><option>RAG / Document Q&A</option><option>Customer Support</option><option>Coding / Software Development</option><option>Research</option><option>Data Analysis</option><option>Agent / Tool Use</option><option>Structured Extraction</option></select></label>
-          <label>Prompt<textarea id="prompt" maxlength="30000" placeholder="Example: Look at this API and fix why it is slow. Don't break anything. Give me the files I need to change."></textarea></label>
-          <label>Optional evidence / context<textarea id="context" class="small" maxlength="60000" placeholder="Selected logs, requirements, code excerpt, document text, acceptance criteria..."></textarea></label>
-          <div class="community-file-upload"><div class="subhead"><div><h3>Scanned project files</h3><span>Up to 5 text/code files · every file must pass PQA Guard</span></div><span class="badge neutral">Community</span></div><input id="communityFile" type="file" multiple hidden accept=".txt,.md,.markdown,.json,.csv,.yaml,.yml,.js,.ts,.py,.html,.htm,.xml,.log"><button id="pickCommunityFile" class="dropzone" type="button"><b>Add or replace project files</b><span>Every file is scanned locally and by the central PQA security control plane before it can become analysis context. Re-selecting a file with the same name replaces it.</span><small>.txt .md .json .csv .yaml .js .ts .py .html .xml .log</small></button><div id="communityFileList" class="doc-list"><span class="muted">No files selected.</span></div><div id="communityFileStatus" class="file-status muted">No file selected.</div></div>
-          <section class="guard-panel" id="guardPanel"><div class="subhead"><div><h3>PQA Guard Community</h3><span>pre-execution input scan</span></div><span class="severity unknown" id="guardSeverity">NOT SCANNED</span></div><p>Scans prompts and uploaded text for prompt injection, instruction override, secret-exfiltration requests, encoded payloads, credential material, and active-script indicators.</p><div id="guardFindings" class="guard-findings"><span class="muted">Run an analysis or upload a file to scan.</span></div><small>Suspicious content is never processed. The default limit is three suspicious attempts before the client network is blocked until the PQA owner clears it; the owner can configure this limit. PQA Guard is a pre-execution defense layer, not antivirus or a malware sandbox.</small></section>
-          <label class="check"><input id="current" type="checkbox"> Requires current / time-sensitive facts</label>
-          <div class="actionrow"><button id="analyze" class="button primary">Analyze instruction</button><button id="cancel" class="button ghost" disabled>Cancel</button></div>
-          <p class="privacy">Prompt/context required for refresh recovery is stored locally in this browser. The application does not persist it on the server. If Gemini is enabled, evaluation content is sent to the configured Gemini endpoint.</p>
-        </div>
-
-        <div class="surface result-panel is-hidden" id="communityResultPanel">
-          <div class="result-header">
-            <div><p class="eyebrow">RELIABILITY ASSESSMENT</p><h2>Instruction quality</h2></div>
-            <span id="severityBadge" class="severity unknown">NOT EVALUATED</span>
-          </div>
-          <div class="hero-score-row">
-            <div class="hero-score"><b id="score">—</b><span>/100</span><small id="quality">READY</small></div>
-            <div class="risk-stack">
-              <span>Hallucination risk <b id="risk">—</b></span>
-              <span>Score range <b id="scoreRange">—</b></span>
-              <span>Evidence strength <b id="scoreConfidence">—</b></span>
-              <span>Evaluation mode <b id="evaluationMode">—</b></span>
-            </div>
-          </div>
-
-
-<div class="hallucination-explainer-wrap">
-<details class="hallucination-explainer" id="hallucinationExplainer">
-<summary>
-  <div><span class="hall-kicker">HALLUCINATION EXPLAINER</span><b>Why this prompt may hallucinate</b><small>Risk mechanics, not a probability claim</small></div>
-  <span class="hall-risk-pill" id="hallRiskIndex">—/100</span>
-</summary>
-<div class="hallucination-body">
-  <div class="hall-probability-note"><span class="badge neutral" id="hallProbabilityStatus">NOT CALIBRATED</span><p id="hallProbabilityText">PQA reports a prompt-level risk index, not a calibrated probability that a model response will hallucinate.</p></div>
-  <div class="hall-metric-grid">
-    <article><span>ANSWERABILITY</span><b id="hallAnswerability">—</b><small id="hallAnswerabilityLabel">Awaiting analysis</small></article>
-    <article><span>GROUNDING REQUIREMENT</span><b id="hallGrounding">—</b><small id="hallGroundingLabel">Awaiting analysis</small></article>
-    <article><span>HALLUCINATION PRESSURE</span><b id="hallPressure">—</b><small id="hallPressureLabel">Awaiting analysis</small></article>
-    <article><span>ABSTENTION SAFETY</span><b id="hallAbstention">—</b><small id="hallAbstentionLabel">Awaiting analysis</small></article>
-    <article><span>CURRENT-FACT DEPENDENCY</span><b id="hallCurrentDependency">—</b><small id="hallCurrentDependencyLabel">Awaiting analysis</small></article>
-  </div>
-  <div class="hall-remediation is-hidden" id="hallRemediation"><div><span>ORIGINAL</span><b id="hallOriginalRisk">—</b></div><span class="hall-arrow">→</span><div><span>RECOMMENDED PROMPT</span><b id="hallRecommendedRisk">—</b></div><small id="hallReduction">—</small></div>
-  <div class="hall-two-col">
-    <section><div class="subhead"><h3>Main risk drivers</h3><span>point contribution</span></div><div class="hall-list" id="hallDrivers"><p class="muted">No analysis yet.</p></div></section>
-    <section><div class="subhead"><h3>Risk categories</h3><span>0–100 index</span></div><div class="hall-categories" id="hallCategories"></div></section>
-  </div>
-  <div class="hall-two-col">
-    <section><div class="subhead"><h3>What would reduce risk</h3><span>projected change</span></div><div class="hall-list" id="hallInterventions"><p class="muted">No analysis yet.</p></div></section>
-    <section><div class="subhead"><h3>Execution conditions</h3><span>scenario sensitivity</span></div><div class="hall-list" id="hallScenarios"><p class="muted">No analysis yet.</p></div></section>
-  </div>
-  <p class="hall-disclaimer" id="hallDisclaimer">Risk index and projected reductions are engineering decision-support signals, not empirical probabilities or guarantees of model behavior.</p>
-</div>
-</details>
-</div>
-          <section id="executionReadinessPanel" class="subsurface is-hidden"><div class="subhead"><div><h3>Execution readiness</h3><span>artifact-aware implementation assessment</span></div><span class="badge neutral" id="executionReadinessStatus">—</span></div><div class="metric-grid"><div><span>Requirements sufficiency</span><b id="execRequirementsScore">—</b></div><div><span>Implementation context</span><b id="execImplementationScore">—</b></div><div><span>Artifact grounding</span><b id="execGroundingScore">—</b></div><div><span>Execution readiness</span><b id="execReadinessScore">—</b></div></div><p id="executionNotice" class="privacy"></p><div id="executionMissing" class="notice-list"></div><div id="coverageGraphPanel" class="coverage-graph is-hidden"><div class="subhead"><div><h4>Requirement Coverage Graph</h4><span>requirement → code → tests → runtime evidence</span></div><span class="badge neutral" id="coverageGraphStatus">—</span></div><div class="coverage-metrics"><div><span>CODE COVERAGE</span><b id="coverageCodePct">—</b></div><div><span>TEST EVIDENCE</span><b id="coverageTestPct">—</b></div><div><span>RUNTIME VERIFIED</span><b id="coverageRuntimePct">—</b></div><div><span>GAPS</span><b id="coverageGapCount">—</b></div></div><div id="coverageGraphCanvas" class="coverage-graph-canvas" role="img" aria-label="Requirement coverage graph"></div><div id="coverageGraphLegend" class="coverage-graph-legend"></div><div class="subhead compact"><h5>Engineering value</h5><span>evidence-based coverage</span></div><ul id="coverageGraphValue" class="dense-list"></ul></div><div class="subhead"><h4>Expected improvements from using the recommended prompt</h4><span>projected, not guaranteed</span></div><ul id="executionImprovements" class="dense-list"></ul><div class="subhead"><h4>Generated execution files</h4><span>downloadable · authored · integrity metadata</span></div><div id="generatedOutputFiles" class="generated-files"><span class="muted">No generated files for this analysis.</span></div><button id="downloadExecutionReadme" class="button ghost compact" type="button">Download README_EXECUTION.md</button></section>
-          <div id="dimensions" class="dimensions"></div>
-
-          <div class="two-col-blocks">
-            <div class="subsurface"><div class="subhead"><h3>Reason codes</h3><span>machine-readable</span></div><div id="reasonCodes" class="chips"><span class="chip muted-chip">No reason codes</span></div></div>
-            <div class="subsurface"><div class="subhead"><h3>Evidence & controls</h3><span>positive safeguards</span></div><ul id="strengths" class="dense-list"><li>No evidence controls detected yet.</li></ul></div>
-          </div>
-
-          <div class="two-col-blocks">
-            <div class="subsurface"><div class="subhead"><h3>Findings</h3><span>reliability gaps</span></div><ul id="issues" class="dense-list"><li>Analyze an instruction to see findings.</li></ul></div>
-            <div class="subsurface"><div class="subhead"><h3>Recommendations</h3><span>next actions</span></div><ul id="recs" class="dense-list"><li>Recommendations will appear here.</li></ul></div>
-          </div>
-        </div>
-      </section>
-
-      <section id="communityImprovedPanel" class="surface improved-panel is-hidden">
-        <div class="section-title"><div><p class="eyebrow">REMEDIATION</p><h2>Recommended instruction</h2></div><button id="reanalyze" class="button ghost compact" disabled>Re-analyze</button></div>
-        <textarea id="improved" readonly placeholder="The recommended prompt will appear here when Gemini is configured."></textarea>
-        <p id="disclaimer" class="muted"></p>
-      </section>
-
-      <section id="communityExecutionPanel" class="surface execution-panel is-hidden">
-        <div class="section-title"><div><p class="eyebrow">EXECUTION</p><h2>Analysis lifecycle</h2></div><strong id="stage">Ready</strong></div>
-        <div class="progresswrap"><div class="progress"><i id="progressBar"></i></div><small id="progressText">0%</small></div>
-        <div class="execution-metrics">
-          <span>Elapsed <b id="elapsed">—</b></span><span>ETA <b id="eta">—</b></span><span>Request <b id="requestId">—</b></span><span>State <b id="dbState">Ready</b></span><span>Attempts <b id="attempts">—</b></span>
-        </div>
-      </section>
-
-      <section id="communityAuditGrid" class="audit-grid is-hidden">
-        <div class="surface">
-          <div class="section-title"><div><p class="eyebrow">AUDITABILITY</p><h2>Evaluation provenance</h2></div><span class="badge success">TRACEABLE</span></div>
-          <dl class="audit-list">
-            <div><dt>PQA engine</dt><dd id="auditEngine">v1.9.1</dd></div>
-            <div><dt>Rubric</dt><dd id="auditRubric">—</dd></div>
-            <div><dt>Risk model</dt><dd id="auditRiskModel">evidence-tiered-v3</dd></div>
-            <div><dt>Scoring profile</dt><dd id="auditProfile">—</dd></div>
-            <div><dt>Judge</dt><dd id="judge">—</dd></div>
-            <div><dt>Judge latency</dt><dd id="judgeLatency">—</dd></div>
-            <div><dt>Request ID</dt><dd id="auditRequest">—</dd></div>
-            <div><dt>Updated</dt><dd id="auditUpdated">—</dd></div>
-          </dl>
-        </div>
-        <div class="surface">
-          <div class="section-title"><div><p class="eyebrow">RISK EVIDENCE</p><h2>Detected indicators</h2></div></div>
-          <ul id="riskIndicators" class="evidence-list"><li>No risk evidence available yet.</li></ul>
-        </div>
-      </section>
-
-      <section id="diagnostics" class="diagnostics">
-        <div class="surface"><div class="section-title"><div><p class="eyebrow">DIAGNOSTICS</p><h2>Live execution log</h2></div><div class="inline-actions"><button id="fetchServerLogs" class="button ghost compact">Server logs</button><button id="clearLog" class="button ghost compact">Clear</button></div></div><pre id="liveLog" class="logbox">Ready.</pre></div>
-        <div class="surface"><div class="section-title"><div><p class="eyebrow">JUDGE EVIDENCE</p><h2>Gemini structured response</h2></div><button id="copyJudge" class="button ghost compact" disabled>Copy JSON</button></div><pre id="judgeResponse" class="logbox jsonbox">No Gemini response yet.</pre></div>
-      </section>
-
-      <section id="historySection" class="surface transactions">
-        <div class="section-title"><div><p class="eyebrow">LOCAL AUDIT LEDGER</p><h2>Browser transaction history</h2></div><button id="clearHistory" class="button ghost compact">Clear history</button></div>
-        <div id="history" class="history"></div>
-      </section>
-    </main>
-
-    <footer>PQA v1.14.0 · Benchmark v4.1 · Prompt-level risk indicators are engineering signals, not guarantees of model behavior.</footer>
-  </div>
-</div>
-<script type="module" src="/app.js?v=1.9.1"></script>
+    <h2 data-i18n="Checklist">Checklist</h2>
+    <ul id="checks" class="checks"></ul>
+    <h2 data-i18n="Security scan">Security scan</h2>
+    <ul id="guard" class="checks"></ul>
+    <h2 data-i18n="Improved prompt">Improved prompt</h2>
+    <textarea id="improved" rows="7" readonly></textarea>
+    <button id="copy" data-i18n="Copy">Copy</button>
+    <p class="muted small" data-i18n="method">How the score works: each applicable check counts equally; the score is the share of applicable checks that pass.</p>
+  </section>
+</main>
+<footer class="muted small"><span data-i18n="footer">PQA Community Edition is open source (MIT).</span> <a href="https://promptquality.ai" rel="noopener">promptquality.ai</a></footer>
+<script type="module" src="app.js"></script>
 </body>
 </html>
